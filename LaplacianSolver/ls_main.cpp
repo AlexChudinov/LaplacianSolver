@@ -1,5 +1,5 @@
 // dllmain.cpp: определяет точку входа для приложения DLL.
-#include "stdafx.h"
+#include "ls_main.h"
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -17,3 +17,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	return TRUE;
 }
 
+LAPLACIAN_SOLVER_EXPORT void testMsg(LPCWCH msg)
+{
+	MessageBox(NULL, msg, L"Laplacian solver dll msg", MB_OK);
+}

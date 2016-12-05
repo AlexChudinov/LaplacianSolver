@@ -13,23 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Заголовочные файлы\mesh_math">
-      <UniqueIdentifier>{befe937f-3f3e-4046-8804-ee3a8b798e3d}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ls_main.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="mesh_math\graph.h">
-      <Filter>Заголовочные файлы\mesh_math</Filter>
-    </ClInclude>
-    <ClInclude Include="mesh_math\mesh_geometry.h">
-      <Filter>Заголовочные файлы\mesh_math</Filter>
-    </ClInclude>
+    <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ls_main.cpp">
+    <ClCompile Include="test.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
   </ItemGroup>

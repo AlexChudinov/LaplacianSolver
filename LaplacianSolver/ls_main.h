@@ -5,12 +5,12 @@
 
 #pragma once
 
-#include "targetver.h"
-
 #define WIN32_LEAN_AND_MEAN             // Исключите редко используемые компоненты из заголовков Windows
 // Файлы заголовков Windows:
 #include <windows.h>
 
+#define LAPLACIAN_SOLVER_EXPORT __declspec(dllexport)
 
+EXTERN_C LAPLACIAN_SOLVER_EXPORT void testMsg(LPCWCH msg);
 
 // TODO: Установите здесь ссылки на дополнительные заголовки, требующиеся для программы
