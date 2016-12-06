@@ -21,9 +21,6 @@
     <ClInclude Include="ls_main.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="mesh_math\graph.h">
-      <Filter>Заголовочные файлы\mesh_math</Filter>
-    </ClInclude>
     <ClInclude Include="mesh_math\mesh_geometry.h">
       <Filter>Заголовочные файлы\mesh_math</Filter>
     </ClInclude>

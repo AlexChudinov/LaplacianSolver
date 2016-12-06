@@ -75,14 +75,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>D:\Git\Repo\LaplacianSolver\Debug;$(LibraryPath)</LibraryPath>
-    <IncludePath>D:\Git\Repo\LaplacianSolver\LaplacianSolver;$(IncludePath)</IncludePath>
+    <IncludePath>C:\myLib;D:\Git\Repo\LaplacianSolver\LaplacianSolver;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\Git\Repo\LaplacianSolver\LaplacianSolver;$(IncludePath)</IncludePath>
+    <IncludePath>C:\myLib;D:\Git\Repo\LaplacianSolver\LaplacianSolver;$(IncludePath)</IncludePath>
     <LibraryPath>D:\Git\Repo\LaplacianSolver\x64\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
