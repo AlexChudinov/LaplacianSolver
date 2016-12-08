@@ -7,8 +7,6 @@
 #include <linearAlgebra\vectorTemplate.h>
 #include <data_structs\graph.h>
 
-template<typename Float, typename label> class mesh_geometry;
-
 /**
  * Mesh connectivity and node space positions
  */
@@ -24,9 +22,11 @@ public:
     using box3D          = std::pair<vector3f, vector3f>;
     using label_list	 = std::set<label>;
 
-    using boundaries_list= std::map<string, node_labels>;
-	using boundary_entry = std::pair<string, node_labels>;
-
+    using boundaries_list			= std::map<string, node_labels>;
+	using boundary_entry			= std::pair<string, node_labels>;
+	using boundary_iterator			= typename node_labels::iterator;
+	using boundary_const_iterator	= typename node_labels::const_iterator;
+	
     /**
      *  Node types of a mesh
      */
@@ -106,6 +106,7 @@ public:
      */
     inline bool checkBoundary(const boundary_entry& boundary) const
     { return *std::max_element(boundary.second) > size(); }
+
     /**
      * Checks if the mesh already has such a boundary
      */
@@ -123,6 +124,22 @@ public:
 			}
 		}
 	}
+
+	/**
+	 * Returns true if there is a boundary with a such name
+	 */
+	inline bool isBoundaryName(const string& name) const{ return *boundary_mesh_.lower_bound(name) == name; }
+
+	/**
+	 * Throws an exception if there is no a boundary with a such name
+	 */
+	inline void throwIfNotBoundaryName(const string& name) const
+	{
+		if (!isBoundaryName(name)) throw std::runtime_error(
+			(std::string("No boundary with the name: ") + name) + "."
+		);
+	}
+
     /**
      * Adds new boundary returns true if it is ok
      */
@@ -138,24 +155,73 @@ public:
 
         return true;
     }
+
     /**
      * Sets boundary type
      */
-    bool setBoundaryType(const string& name, NODE_TYPE type)
+    bool setBoundaryType(const string& name, NODE_TYPE type) noexcept
     {
-        if(*boundary_mesh_.lower_bound(name) != name) return false;
+        if(!isBoundaryName(name)) return false;
 		for (label l : boundary_mesh_[name]) node_types_[l] = type;
         return true;
     }
+
     /**
      * Gets boundary type
-     * Note: If nodes of the boundary contain different types the function returns UNKNOWN type
      */
-    NODE_TYPE getBoundaryType(const string& name) const
+    NODE_TYPE getBoundaryType(const string& name) const noexcept
     {
-		if (*boundary_mesh_.lower_bound(name) != name) return UNKNOWN;        
+		if (!isBoundaryName(name)) return UNKNOWN;
 		return node_types_[*boundary_mesh_[name].begin()];
     }
+
+	/**
+	 * Gets iterators to a boundary begin and end
+	 */
+	boundary_iterator beginOf(const string& name)
+	{
+		throwIfNotBoundaryName(name);
+		return boundary_mesh_[name].begin();
+	}
+	boundary_iterator endOf(const string& name)
+	{
+		throwIfNotBoundaryName(name);
+		return boundary_mesh_[name].end();
+	}
+
+	/**
+	 * Gets constant iterators to a boundary begin and end
+	 */
+	boundary_const_iterator constBeginOf(const string& name) const
+	{
+		throwIfNotBoundaryName(name);
+		return boundary_mesh_[name].cbegin();
+	}
+	boundary_const_iterator constEndOf(const string& name) const
+	{
+		throwIfNotBoundaryName(name);
+		return boundary_mesh_[name].cend();
+	}
+
+	/**
+	 * Returns point3D by a label
+	 */
+	inline const vector3f& spacePositionOf(label id) const { return node_positions_[id]; }
+
+	/**
+	 * Returns mesh connectivity
+	 */
+	inline const graph& getGraph() const { return mesh_connectivity_; }
+
+	/**
+	 * Returns array of boundary names
+	 */
+	template<typename It>
+	inline void getBoundaryNames(It dest) const
+	{
+		std::transform(boundary_mesh_.cbegin(), boundary_mesh_.cend(),
+			dest, [](boundary_entry bEntry)->string { return bEntry.first; });
+	}
 };
 
 #endif // MESH_GEOMETRY_H

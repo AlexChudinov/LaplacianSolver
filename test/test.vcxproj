@@ -151,6 +151,14 @@
   <ItemGroup>
     <ClCompile Include="test.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="test_files\cube.geom" />
+    <None Include="test_files\cube.rgn" />
+    <None Include="test_files\cube.var" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="test_files\DC_Potential.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
