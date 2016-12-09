@@ -22,8 +22,8 @@ public:
     using box3D          = std::pair<vector3f, vector3f>;
     using label_list	 = std::set<label>;
 
-    using boundaries_list			= std::map<string, node_labels>;
-	using boundary_entry			= std::pair<string, node_labels>;
+    using boundaries_list			= std::map<string, label_list>;
+	using boundary_entry			= std::pair<string, label_list>;
 	using boundary_iterator			= typename node_labels::iterator;
 	using boundary_const_iterator	= typename node_labels::const_iterator;
 	
@@ -105,7 +105,9 @@ public:
      * Checks if the boundary could be attributed to the mesh
      */
     inline bool checkBoundary(const boundary_entry& boundary) const
-    { return *std::max_element(boundary.second) > size(); }
+    { 
+		return *std::max_element(boundary.second.begin(), boundary.second.end()) < size(); 
+	}
 
     /**
      * Checks if the mesh already has such a boundary
@@ -113,13 +115,15 @@ public:
     inline bool isBoundary(const boundary_entry& boundary) const
     { 
 		boundaries_list::const_iterator it = boundary_mesh_.lower_bound(boundary.first);
+		if (it == boundary_mesh_.end()) return false;
 		if (it->first != boundary.first) return false;
 		else {
 			if (boundary.second.size() != it->second.size()) return false;
 			else
 			{
-				for (size_t i = 0; i < it->second.size(); ++i)
-					if (it->second[i] != boundary.second[i]) return false;
+				label_list::const_iterator it1 = it->second.cbegin(), it2 = boundary.second.cbegin();
+				for (; it1 != it->second.cend(); ++it1, ++it2)
+					if (*it1 != *it2) return false;
 				return true;
 			}
 		}
@@ -148,7 +152,8 @@ public:
         //If the mesh already has this boundary
         if(isBoundary(boundary)) return false;
         //If the mesh is not fitted with the boundary
-        if(!checkBoundary(boundary)) throw(std::runtime_error("Boundary contains too big labels."));
+        if(!checkBoundary(boundary)) 
+			throw(std::runtime_error("Boundary contains too big labels."));
 
 		boundary_mesh_.insert(boundary);
 		for (label l : boundary.second) node_types_[l] = type;

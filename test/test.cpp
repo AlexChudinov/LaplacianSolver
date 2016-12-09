@@ -41,14 +41,52 @@ int main()
 		std::cout << "Load " << line << std::endl;
 		in >> nElems;
 		std::cout << "Number of elements: " << nElems << std::endl;
-
-		for ()
+		//Load geometric elements
+		for (size_t i = 0; i < nElems; ++i)
+		{
+			math::vector_c<uint32_t, 8> verts;
+			in >> verts;
+			verts -= 1U;
+			g.addHexa(verts);
+		}
+		in.close();
+		MeshGeom meshGeom(g, ndPositions);
+		//Open boundary file
+		in.open("test_files/cube.rgn");
+		if (!in) throw std::runtime_error("Could not open test file.");
+		in >> nElems;
+		std::cout << "Number of boundaries: " << nElems << ".\n";
+		std::getline(in, line);
+		for (size_t i = 0; i < nElems; ++i)
+		{
+			MeshGeom::boundary_entry bdEntry;
+			std::getline(in, line);
+			std::cout << "Load " << line << ".\n";
+			bdEntry.first = line;
+			 //Skip line
+			std::getline(in, line);
+			size_t nSquares;
+			in >> nSquares;
+			std::cout << "Number of elements: " << nSquares << ".\n";
+			for (size_t j = 0; j < nSquares; ++j)
+			{
+				for (size_t k = 0; k < 4; ++k)
+				{
+					uint32_t vertex;
+					in >> vertex;
+					bdEntry.second.insert(vertex-1);
+				}
+			}
+			meshGeom.addBoundary(bdEntry);
+			std::getline(in, line);
+		}
 
 		in.close();
 	}
 	catch (const std::exception& e)
 	{
 		std::cout << "Exception: " << e.what() << std::endl;
+		return 1;
 	}
     return 0;
 }
