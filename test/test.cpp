@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string>
 #include <mesh_math\mesh_geometry.h>
+#include <mesh_math\Field.h>
 
 int main()
 {
@@ -80,8 +81,16 @@ int main()
 			meshGeom.addBoundary(bdEntry);
 			std::getline(in, line);
 		}
-
 		in.close();
+
+		//Substract boundaries list
+		std::vector<std::string> boundaryList(meshGeom.boundaryNum());
+		meshGeom.getBoundaryNames(boundaryList.begin());
+
+		std::cout << "\nZero filled field creation" << std::endl;
+		Field<double> field(meshGeom);
+		std::vector<double> boundaryVal = field.getBoundaryVal(boundaryList[0].c_str());
+
 	}
 	catch (const std::exception& e)
 	{

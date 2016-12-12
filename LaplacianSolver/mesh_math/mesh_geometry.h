@@ -24,8 +24,8 @@ public:
 
     using boundaries_list			= std::map<string, label_list>;
 	using boundary_entry			= std::pair<string, label_list>;
-	using boundary_iterator			= typename node_labels::iterator;
-	using boundary_const_iterator	= typename node_labels::const_iterator;
+	using boundary_iterator			= typename label_list::iterator;
+	using boundary_const_iterator	= typename label_list::const_iterator;
 	
     /**
      *  Node types of a mesh
@@ -35,7 +35,7 @@ public:
         INNER_POINT            = 0x00,
         BOUNDARY_ZERO_GRADIENT = 0x01,
         BOUNDARY_FIXED_VALUE   = 0x02,
-        UNKNOWN                = 0xFF ///Some error case
+        BOUNDARY_UNKNOWN       = 0xFF ///Some error case
     };
 
     using node_types_list= std::vector<NODE_TYPE>;
@@ -144,6 +144,11 @@ public:
 		);
 	}
 
+	/**
+	 * Gets number of boundaries
+	 */
+	inline size_t boundaryNum() const { return boundary_mesh_.size(); }
+
     /**
      * Adds new boundary returns true if it is ok
      */
@@ -164,20 +169,18 @@ public:
     /**
      * Sets boundary type
      */
-    bool setBoundaryType(const string& name, NODE_TYPE type) noexcept
+    bool setBoundaryType(const string& name, NODE_TYPE type)
     {
-        if(!isBoundaryName(name)) return false;
-		for (label l : boundary_mesh_[name]) node_types_[l] = type;
+		for (label l : boundary_mesh_.at(name)) node_types_[l] = type;
         return true;
     }
 
     /**
      * Gets boundary type
      */
-    NODE_TYPE getBoundaryType(const string& name) const noexcept
+    NODE_TYPE getBoundaryType(const string& name) const
     {
-		if (!isBoundaryName(name)) return UNKNOWN;
-		return node_types_[*boundary_mesh_[name].begin()];
+		return node_types_[*boundary_mesh_.at(name).begin()];
     }
 
 	/**
@@ -185,13 +188,11 @@ public:
 	 */
 	boundary_iterator beginOf(const string& name)
 	{
-		throwIfNotBoundaryName(name);
-		return boundary_mesh_[name].begin();
+		return boundary_mesh_.at(name).begin();
 	}
 	boundary_iterator endOf(const string& name)
 	{
-		throwIfNotBoundaryName(name);
-		return boundary_mesh_[name].end();
+		return boundary_mesh_.at(name).end();
 	}
 
 	/**
@@ -199,13 +200,11 @@ public:
 	 */
 	boundary_const_iterator constBeginOf(const string& name) const
 	{
-		throwIfNotBoundaryName(name);
-		return boundary_mesh_[name].cbegin();
+		return boundary_mesh_.at(name).begin();
 	}
 	boundary_const_iterator constEndOf(const string& name) const
 	{
-		throwIfNotBoundaryName(name);
-		return boundary_mesh_[name].cend();
+		return boundary_mesh_.at(name).end();
 	}
 
 	/**
@@ -214,7 +213,7 @@ public:
 	inline const vector3f& spacePositionOf(label id) const { return node_positions_[id]; }
 
 	/**
-	 * Returns mesh connectivity
+	 * Returns mesh connectivity graph
 	 */
 	inline const graph& getGraph() const { return mesh_connectivity_; }
 
@@ -226,6 +225,14 @@ public:
 	{
 		std::transform(boundary_mesh_.cbegin(), boundary_mesh_.cend(),
 			dest, [](boundary_entry bEntry)->string { return bEntry.first; });
+	}
+
+	/**
+	 * Returns size of a boundary by name
+	 */
+	inline size_t boundarySize(const string& name) const
+	{
+		return boundary_mesh_.at(name).size();
 	}
 };
 
