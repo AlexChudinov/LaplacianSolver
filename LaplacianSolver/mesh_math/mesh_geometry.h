@@ -56,7 +56,8 @@ public:
 	}
 
     /**
-     * Returns all mesh connections for OpenGL drawing with GL_LINES flag
+     * Returns all mesh points in the order where points at odd indexes coincides with points at even indexes,
+	 * Therefore, if we put the return to a glDrawArray function with GL_LINES it will draw the mesh
      */
     node_positions meshConnections() const
     {
