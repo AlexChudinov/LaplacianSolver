@@ -90,7 +90,9 @@ int main()
 		std::cout << "\nZero filled field creation" << std::endl;
 		Field<double> field(meshGeom);
 		std::vector<double> boundaryVal = field.getBoundaryVal(boundaryList[0].c_str());
-
+		boundaryVal.assign(boundaryVal.size(), 1.0);
+		//Set value an a boundary
+		field.setBoundaryVal(boundaryList[0].c_str(), boundaryVal);
 	}
 	catch (const std::exception& e)
 	{

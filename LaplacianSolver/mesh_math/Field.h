@@ -54,12 +54,12 @@ public:
 	public:
 		FieldType& operator * ()
 		{ 
-			return _data[*static_cast<const MeshGeom::boundary_const_iterator>(*this)]; 
+			return _data[*static_cast<const base_iterator>(*this)]; 
 		}
 
 		FieldType& operator ->() 
 		{ 
-			return _data[*static_cast<const MeshGeom::boundary_const_iterator>(*this)]; 
+			return _data[*static_cast<const base_iterator>(*this)]; 
 		}
 	};
 
@@ -79,12 +79,12 @@ public:
 	public:
 		const FieldType& operator * () const 
 		{ 
-			return _data[*static_cast<const MeshGeom::boundary_const_iterator>(*this)]; 
+			return _data[*static_cast<const base_iterator>(*this)]; 
 		}
 
 		const FieldType& operator ->() const 
 		{ 
-			return _data[*static_cast<const MeshGeom::boundary_const_iterator>(*this)]; 
+			return _data[*static_cast<const base_iterator>(*this)]; 
 		}
 	};
 
@@ -93,11 +93,11 @@ public:
 	 */
 	BoundaryIterator boundaryBegin(const std::string& name)
 	{
-		return BoundaryIterator(_geometry.beginOf(name), _data.data());
+		return BoundaryIterator(_geometry.constBeginOf(name), _data.data());
 	}
 	BoundaryIterator boundaryEnd(const std::string& name)
 	{
-		return BoundaryIterator(_geometry.endOf(name), _data.data());
+		return BoundaryIterator(_geometry.constEndOf(name), _data.data());
 	}
 	ConstBoundaryIterator boundaryConstBegin(const std::string& name) const
 	{
@@ -118,7 +118,7 @@ public:
 	void setBoundaryVal(const char* name, const DataVector& vals)
 	{
 		if (vals.size() != _geometry.boundarySize(name)) throw std::runtime_error("Boundary and input vector sizes mismatch.\n");
-		std::copy(vals.begin(), vals.end(), BoundaryIterator(_geometry.beginOf(name)));
+		std::copy(vals.begin(), vals.end(), boundaryBegin(name));
 	}
 
 	/**
