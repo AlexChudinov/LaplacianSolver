@@ -1,23 +1,19 @@
 // Test laplacian solver dll
 //
-
+#define _USE_LS_DLL_
 #include <ls_main.h>
+#include <LSExport.h>
 #include <iostream>
-#include <iterator>
 #include <fstream>
 #include <string>
-#include <mesh_math\mesh_geometry.h>
-#include <mesh_math\Field.h>
+#include <vector>
 
 int main()
 {
 	try 
 	{
-		using MeshGeom = MeshGeom<double, uint32_t>;
-		using graph = typename MeshGeom::graph;
-
 		std::cout << "Creating test mesh for cube:\n";
-		data_structs::graph<uint32_t> g;
+		Graph* g = Graph::create();
 		std::ifstream in;
 		in.open("test_files/cube.geom");
 		if (!in) throw std::runtime_error("Could not open test file.");
@@ -28,9 +24,10 @@ int main()
 		std::cout << "Load " << line << std::endl;
 		in >> nElems;
 		std::cout << "Number of elements: " << nElems << std::endl;
-		typename MeshGeom::node_positions ndPositions(nElems);
-		size_t num;
-		for (size_t i = 0; i < nElems; ++i) in >> num >> ndPositions[i];
+		std::vector<double> ndPositions(3*nElems);
+		size_t num, j = 0;
+		for (size_t i = 0; i < nElems; ++i) 
+			in >> num >> ndPositions[j++] >> ndPositions[j++] >> ndPositions[j++];
 
 		//Skip empty elements
 		for (size_t i = 0; i < 7; ++i)
@@ -45,54 +42,13 @@ int main()
 		//Load geometric elements
 		for (size_t i = 0; i < nElems; ++i)
 		{
-			math::vector_c<uint32_t, 8> verts;
-			in >> verts;
-			verts -= 1U;
-			g.addHexa(verts);
+			uint32_t n0, n1, n2, n3, n4, n5, n6, n7;
+			in >> n0 >> n1 >> n2 >> n3 >> n4 >> n5 >> n6 >> n7;
+			--n0; --n1; --n2; --n3; --n4; --n5; --n6; --n7;
+			g->addHexa(n0, n1, n2, n3, n4, n5, n6, n7);
 		}
 		in.close();
-		MeshGeom meshGeom(g, ndPositions);
-		//Open boundary file
-		in.open("test_files/cube.rgn");
-		if (!in) throw std::runtime_error("Could not open test file.");
-		in >> nElems;
-		std::cout << "Number of boundaries: " << nElems << ".\n";
-		std::getline(in, line);
-		for (size_t i = 0; i < nElems; ++i)
-		{
-			MeshGeom::boundary_entry bdEntry;
-			std::getline(in, line);
-			std::cout << "Load " << line << ".\n";
-			bdEntry.first = line;
-			 //Skip line
-			std::getline(in, line);
-			size_t nSquares;
-			in >> nSquares;
-			std::cout << "Number of elements: " << nSquares << ".\n";
-			for (size_t j = 0; j < nSquares; ++j)
-			{
-				for (size_t k = 0; k < 4; ++k)
-				{
-					uint32_t vertex;
-					in >> vertex;
-					bdEntry.second.insert(vertex-1);
-				}
-			}
-			meshGeom.addBoundary(bdEntry);
-			std::getline(in, line);
-		}
-		in.close();
-
-		//Substract boundaries list
-		std::vector<std::string> boundaryList(meshGeom.boundaryNum());
-		meshGeom.getBoundaryNames(boundaryList.begin());
-
-		std::cout << "\nZero filled field creation" << std::endl;
-		Field<double> field(meshGeom);
-		std::vector<double> boundaryVal = field.getBoundaryVal(boundaryList[0].c_str());
-		boundaryVal.assign(boundaryVal.size(), 1.0);
-		//Set value an a boundary
-		field.setBoundaryVal(boundaryList[0].c_str(), boundaryVal);
+		Graph::free(g);
 	}
 	catch (const std::exception& e)
 	{

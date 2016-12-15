@@ -1,4 +1,4 @@
-// dllmain.cpp: определяет точку входа для приложения DLL.
+
 #include "ls_main.h"
 
 BOOL APIENTRY DllMain( HMODULE hModule,

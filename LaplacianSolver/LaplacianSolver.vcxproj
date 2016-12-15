@@ -144,11 +144,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="GraphImplementation.h" />
+    <ClInclude Include="LSExport.h" />
     <ClInclude Include="ls_main.h" />
+    <ClInclude Include="MeshImplementation.h" />
     <ClInclude Include="mesh_math\Field.h" />
     <ClInclude Include="mesh_math\mesh_geometry.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GraphImplementation.cpp" />
+    <ClCompile Include="LSExport.cpp" />
     <ClCompile Include="ls_main.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

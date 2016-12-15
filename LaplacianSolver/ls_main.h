@@ -1,16 +1,15 @@
-// stdafx.h: включаемый файл дл€ стандартных системных включаемых файлов
-// или включаемых файлов дл€ конкретного проекта, которые часто используютс€, но
-// не часто измен€ютс€
-//
-
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN             // »сключите редко используемые компоненты из заголовков Windows
-// ‘айлы заголовков Windows:
+#define WIN32_LEAN_AND_MEAN         
 #define NOMINMAX
 #include <windows.h>
+#undef NOMINMAX
 
+#ifndef _USE_LS_DLL_
 #define LAPLACIAN_SOLVER_EXPORT __declspec(dllexport)
+#else
+#define LAPLACIAN_SOLVER_EXPORT __declspec(dllimport)
+#endif // !_USE_LS_DLL_
 
 EXTERN_C LAPLACIAN_SOLVER_EXPORT void testMsg(LPCWCH msg);
 

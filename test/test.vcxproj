@@ -74,7 +74,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>D:\Git\Repo\LaplacianSolver\Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\Git\Repo\LaplacianSolver\x64\Debug;$(LibraryPath)</LibraryPath>
     <IncludePath>C:\myLib;D:\Git\Repo\LaplacianSolver\LaplacianSolver;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

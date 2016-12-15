@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LaplacianSolver", "LaplacianSolver\LaplacianSolver.vcxproj", "{6C89EF73-6B13-4FD9-B0A2-E7C092743D3D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj", "{6FB04C4A-B074-4D2B-8A90-B05D9CD80FEB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6C89EF73-6B13-4FD9-B0A2-E7C092743D3D} = {6C89EF73-6B13-4FD9-B0A2-E7C092743D3D}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

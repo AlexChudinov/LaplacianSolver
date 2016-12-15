@@ -16,6 +16,12 @@
     <Filter Include="Заголовочные файлы\mesh_math">
       <UniqueIdentifier>{befe937f-3f3e-4046-8804-ee3a8b798e3d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Заголовочные файлы\export">
+      <UniqueIdentifier>{c3298ca4-8780-4f38-8ad8-6bd3a25091aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\export">
+      <UniqueIdentifier>{024ddde3-2f5c-48df-b269-b872972f5959}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ls_main.h">
@@ -27,10 +33,25 @@
     <ClInclude Include="mesh_math\Field.h">
       <Filter>Заголовочные файлы\mesh_math</Filter>
     </ClInclude>
+    <ClInclude Include="LSExport.h">
+      <Filter>Заголовочные файлы\export</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphImplementation.h">
+      <Filter>Заголовочные файлы\export</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshImplementation.h">
+      <Filter>Заголовочные файлы\export</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ls_main.cpp">
       <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="LSExport.cpp">
+      <Filter>Файлы исходного кода\export</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphImplementation.cpp">
+      <Filter>Файлы исходного кода\export</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
