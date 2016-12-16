@@ -53,5 +53,8 @@
     <ClCompile Include="GraphImplementation.cpp">
       <Filter>Файлы исходного кода\export</Filter>
     </ClCompile>
+    <ClCompile Include="MeshImplementation.cpp">
+      <Filter>Файлы исходного кода\export</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

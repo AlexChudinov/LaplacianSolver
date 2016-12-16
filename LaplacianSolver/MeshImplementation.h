@@ -12,9 +12,7 @@ using node_positions = std::vector<vector3f>;
 class MeshImplementation : public Mesh, public MeshGeom<double, uint32_t>
 {
 public:
-	MeshImplementation(const graph& g, const node_positions& np)
-		: Mesh(), MeshGeom<double, uint32_t>(g, np)
-	{}
+	MeshImplementation(const graph& g, const node_positions& np);
 };
 
 #endif // !_MESH_IMPLEMENTATION_H_

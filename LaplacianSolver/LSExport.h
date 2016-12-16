@@ -21,13 +21,11 @@ public:
 
 //Forward class declaration
 namespace std { template<typename ... T> class vector; }
-//Dummy class that can be removed with typedef Vector3D v3d
-struct v3d { double x, y, z; };
 
 class LAPLACIAN_SOLVER_EXPORT Mesh
 {
 public:
-	static Mesh* create(const Graph* g, const std::vector<v3d>& nodePositions);
+	static Mesh* create(const Graph* g, const std::vector<double[3]>& nodePositions);
 };
 
 #endif // !_LS_EXPORT_H_
