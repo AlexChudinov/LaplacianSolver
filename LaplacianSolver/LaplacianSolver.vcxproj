@@ -150,6 +150,7 @@
     <ClInclude Include="MeshImplementation.h" />
     <ClInclude Include="mesh_math\Field.h" />
     <ClInclude Include="mesh_math\mesh_geometry.h" />
+    <ClInclude Include="PotentialFieldImplementation.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GraphImplementation.cpp" />
@@ -169,6 +170,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MeshImplementation.cpp" />
+    <ClCompile Include="PotentialFieldImplementation.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

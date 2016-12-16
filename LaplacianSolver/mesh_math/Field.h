@@ -18,7 +18,7 @@ class Field
 	DataVector _data;
 public:
 	/**
-	 * Attachs geometry info to a vectorized data
+	 * Attachs geometry info a vectorized data
 	 */
 	Field(const MeshGeom& geometry_, const DataVector& data_) 
 		: _geometry(geometry_), _data(data_)
@@ -111,11 +111,11 @@ public:
 	/**
 	 * Set values on a boundary
 	 */
-	void setBoundaryValUniform(const char* name, const FieldType& val)
+	void setBoundaryValUniform(const std::string& name, const FieldType& val)
 	{
 		std::for_each(_geometry.beginOf(name), _geometry.endOf(name), [&](uint32_t l) { _data[l] = val; });
 	}
-	void setBoundaryVal(const char* name, const DataVector& vals)
+	void setBoundaryVal(const std::string& name, const DataVector& vals)
 	{
 		if (vals.size() != _geometry.boundarySize(name)) throw std::runtime_error("Boundary and input vector sizes mismatch.\n");
 		std::copy(vals.begin(), vals.end(), boundaryBegin(name));
@@ -124,7 +124,7 @@ public:
 	/**
 	 * Get values on a boundary
 	 */
-	DataVector getBoundaryVal(const char* name) const
+	DataVector getBoundaryVal(const std::string& name) const
 	{
 		return DataVector(boundaryConstBegin(name), boundaryConstEnd(name));
 	}
