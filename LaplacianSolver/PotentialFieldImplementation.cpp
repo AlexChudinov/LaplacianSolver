@@ -1,7 +1,10 @@
 #include "PotentialFieldImplementation.h"
+#include "MeshImplementation.h"
 
-PotentialFieldImplementation::PotentialFieldImplementation(const mesh_geometry& meshGeom)
-	: basic_field(meshGeom)
+PotentialFieldImplementation::PotentialFieldImplementation(Mesh* meshGeom)
+	: 
+	basic_field(*dynamic_cast<MeshImplementation*>(meshGeom)->geometryPtr()),
+	_pGeometry(dynamic_cast<MeshImplementation*>(meshGeom)->geometryPtr())
 {}
 
 std::vector<double> PotentialFieldImplementation::getPotentialVals() const
@@ -9,8 +12,35 @@ std::vector<double> PotentialFieldImplementation::getPotentialVals() const
 	return basic_field::data();
 }
 
-void PotentialFieldImplementation::setBoundarydVal(const std::string & name, double val)
+void PotentialFieldImplementation::setBoundaryVal(const std::string & name, double val)
 {
-	basic_field::setBoundaryValUniform(name, val);
+	basic_field::set_boundary_uniform_val(name, val);
+}
+
+void PotentialFieldImplementation::addBoundary(const std::string & name, const std::set<UINT>& nodeLabels)
+{
+	basic_field::add_boundary(name, nodeLabels);
+}
+
+void PotentialFieldImplementation::setBoundaryType(const std::string & name, BOUNDARY_TYPE type)
+{
+	switch (type)
+	{
+	case FIXED_VAL: return basic_field::set_boundary_type(name, BOUNDARY_FIXED_VALUE);
+	case ZERO_GRAD: return basic_field::set_boundary_type(name, BOUNDARY_ZERO_GRADIENT);
+	default: throw std::runtime_error(
+		"PotentialFieldImplementation::setBoundaryType :"
+		"Unsupported boundary field type");
+	}
+}
+
+std::vector<std::string> PotentialFieldImplementation::getBoundaryNames() const
+{
+	return basic_field::get_boundary_names();
+}
+
+void PotentialFieldImplementation::diffuse()
+{
+	basic_field::diffuse();
 }
 

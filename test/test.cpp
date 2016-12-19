@@ -57,7 +57,7 @@ Mesh* readConnectivity(std::ostream& readLog, const char* filename)
 	return m;
 }
 
-void readBoundaries(Mesh* m, std::ostream& readLog, const char* filename)
+void readBoundaries(PotentialField* f, std::ostream& readLog, const char* filename)
 {
 	std::set<UINT> labels; //Here we keep the boundary labels, note: start index is 0
 
@@ -90,7 +90,7 @@ void readBoundaries(Mesh* m, std::ostream& readLog, const char* filename)
 		}
 
 		//New boundary!!! Labels start at 0 idx
-		m->addBoundary(line, labels);
+		f->addBoundary(line, labels);
 		///
 
 		std::getline(in, skip_line); //Skip one line
@@ -107,19 +107,24 @@ int main()
 		//Create mesh
 
 		Mesh* m = readConnectivity(std::cout, "test_files/cube.geom");
-		readBoundaries(m, std::cout, "test_files/cube.rgn");
+		PotentialField* f = PotentialField::createZeros(m);
+		Mesh::free(m);
+
+		readBoundaries(f, std::cout, "test_files/cube.rgn");
 
 		//Create field
-		PotentialField* f = PotentialField::createZeros(m);
+		std::vector<std::string> names = f->getBoundaryNames();
+		f->setBoundaryVal(names[0], 1.0);
 
-		Mesh::free(m);
+		f->diffuse();
+
 		PotentialField::free(f);
+		return 0;
 	}
 	catch (const std::exception& e)
 	{
 		std::cout << "Exception: " << e.what() << std::endl;
 		return 1;
 	}
-    return 0;
 }
 

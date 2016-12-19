@@ -9,15 +9,7 @@ class GraphImplementation : public Graph, public data_structs::graph<uint32_t>
 {
 	using base_graph = data_structs::graph<uint32_t>;
 public:
-	void addHexa(
-		uint32_t n0,
-		uint32_t n1,
-		uint32_t n2,
-		uint32_t n3,
-		uint32_t n4,
-		uint32_t n5,
-		uint32_t n6,
-		uint32_t n7);
+	void addHexa(UINT n0, UINT n1, UINT n2, UINT n3, UINT n4, UINT n5, UINT n6, UINT n7);
 };
 
 #endif // !_GRAPH_IMPLEMENTATION_H_

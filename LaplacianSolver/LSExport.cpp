@@ -27,9 +27,9 @@ void Mesh::free(Mesh * m)
 	delete m;
 }
 
-PotentialField * PotentialField::createZeros(const Mesh * m)
+PotentialField * PotentialField::createZeros(Mesh * m)
 {
-	return new PotentialFieldImplementation(*dynamic_cast<const mesh_geometry*>(m));
+	return new PotentialFieldImplementation(m);
 }
 
 void PotentialField::free(PotentialField * f)

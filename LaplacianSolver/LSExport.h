@@ -26,9 +26,6 @@ struct V3D { double x, y, z; };
 class LAPLACIAN_SOLVER_EXPORT Mesh
 {
 public:
-	//Acceptable types of boundaries
-	enum BOUNDARY_TYPE { FIXED_VAL, ZERO_GRAD};
-
 	/**
 	 * Creates new mesh
 	 */
@@ -37,27 +34,37 @@ public:
 	//Deletes mesh instance
 	static void free(Mesh* m);
 
-	//Adds new boundary node labels should be listed
-	virtual void addBoundary(const std::string& name, const std::set<UINT>& nodeLabels) = 0;
-
-	//Works with the types of the boundaries, boundary type by default is FIXED_VAL
-	//Set boundary type returns true if it was succeded
-	virtual bool setBoundaryType(const std::string& name, BOUNDARY_TYPE type) = 0;
-	virtual BOUNDARY_TYPE getBoundaryType(const std::string& name) const = 0;
+	//Returns box defined by two points containing all mesh vertices
+	virtual std::pair<V3D, V3D> getBox() const = 0;
 };
 
 class LAPLACIAN_SOLVER_EXPORT PotentialField
 {
 public:
+	//Acceptable types of boundaries
+	enum BOUNDARY_TYPE { FIXED_VAL, ZERO_GRAD };
+
 	//Creates potential field filled with zeros
-	static PotentialField* createZeros(const Mesh* m);
+	static PotentialField* createZeros(Mesh* m);
 	static void free(PotentialField* f);
 
-	//Get current field values. The indices of the values correspond to number of labels in a graph
+	//Get current field values. The indices of the values correspond to the number of labels in a graph
 	virtual std::vector<double> getPotentialVals() const = 0;
 
 	//Set boundary field values
 	virtual void setBoundaryVal(const std::string& name, double val) = 0;
+
+	//Adds new boundary node labels should be listed
+	virtual void addBoundary(const std::string& name, const std::set<UINT>& nodeLabels) = 0;
+
+	//Sets boundary type
+	virtual void setBoundaryType(const std::string& name, BOUNDARY_TYPE type) = 0;
+
+	//Returns list of all boundary names
+	virtual std::vector<std::string> getBoundaryNames() const = 0;
+
+	//Make one step of laplacian solver
+	virtual void diffuse() = 0;
 };
 
 #endif // !_LS_EXPORT_H_

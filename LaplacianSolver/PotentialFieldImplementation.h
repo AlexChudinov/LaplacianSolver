@@ -2,20 +2,32 @@
 #ifndef _POTENTIAL_FIELD_IMPLEMENTATION_H_
 #define _POTENTIAL_FIELD_IMPLEMENTATION_H_ 1
 
+#include <memory>
+
 #include "LSExport.h"
 #include "mesh_math\Field.h"
 
-using mesh_geometry = MeshGeom<double, UINT>;
-using basic_field = Field<double>;
+using mesh_geom = mesh_geometry<double, UINT>;
+using basic_field = field<double>;
 
 class PotentialFieldImplementation : public PotentialField, public basic_field
 {
+	std::shared_ptr<mesh_geom> _pGeometry; //Just keeps the pointer alive
+
 public:
-	PotentialFieldImplementation(const mesh_geometry& meshGeom);
+	PotentialFieldImplementation(Mesh* meshGeom);
 
 	std::vector<double> getPotentialVals() const;
 
-	void setBoundarydVal(const std::string& name, double val);
+	void setBoundaryVal(const std::string& name, double val);
+
+	void addBoundary(const std::string& name, const std::set<UINT>& nodeLabels);
+
+	void setBoundaryType(const std::string& name, BOUNDARY_TYPE type);
+
+	std::vector<std::string> getBoundaryNames() const;
+
+	void diffuse();
 };
 
 #endif // !_POTENTIAL_FIELD_IMPLEMENTATION_H_

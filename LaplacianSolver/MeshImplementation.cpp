@@ -1,35 +1,20 @@
 #include "MeshImplementation.h"
 
 MeshImplementation::MeshImplementation(const graph& g, const node_positions& np)
-	: Mesh(), MeshGeom<double, UINT>(g, np)
+	: Mesh(), _geometry(new mesh_geom(g, np))
 {}
 
-void MeshImplementation::addBoundary(const std::string & name, const std::set<UINT>& nodeLabels)
+std::shared_ptr<mesh_geom> MeshImplementation::geometryPtr()
 {
-	basic_mesh_geometry::addBoundary(std::make_pair(name, nodeLabels));
+	return _geometry;
 }
 
-bool MeshImplementation::setBoundaryType(const std::string & name, BOUNDARY_TYPE type)
+std::pair<V3D, V3D> MeshImplementation::getBox() const
 {
-	switch (type)
-	{
-	case Mesh::FIXED_VAL:
-		return basic_mesh_geometry::setBoundaryType(name, basic_mesh_geometry::BOUNDARY_FIXED_VALUE);
-	case Mesh::ZERO_GRAD:
-		return basic_mesh_geometry::setBoundaryType(name, basic_mesh_geometry::BOUNDARY_ZERO_GRADIENT);
-	default:
-		return false;
-	}
-}
-
-Mesh::BOUNDARY_TYPE MeshImplementation::getBoundaryType(const std::string & name) const
-{
-	switch (basic_mesh_geometry::getBoundaryType(name))
-	{
-	case basic_mesh_geometry::BOUNDARY_FIXED_VALUE: return FIXED_VAL;
-	case basic_mesh_geometry::BOUNDARY_ZERO_GRADIENT: return ZERO_GRAD;
-	default: throw std::runtime_error(
-		"MeshImplementation::getBoundaryType: "
-		"Ops! The program logic ways is unpredictable sometimes!");
-	}
+	mesh_geom::box3D box_ = _geometry->box();
+	V3D min, max;
+	min.x = box_.first[0]; max.x = box_.second[0];
+	min.y = box_.first[1]; max.y = box_.second[1];
+	min.z = box_.first[2]; max.z = box_.second[2];
+	return std::make_pair(min, max);
 }
