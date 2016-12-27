@@ -91,6 +91,37 @@ public:
 	{
 		for (label ll : mesh_connectivity_.getNeighbour(l)) V(ll);
 	}
+
+	/**
+	 * Search for a clossest point from the start point
+	 * Returns label of the point
+	 */
+	label find_closest(Float x, Float y, Float z, label start = 0) const
+	{
+		vector3f pos{ x, y, z };
+		label result = start;
+		double minDist = math::abs(pos - node_positions_[start]);
+
+		if (minDist == 0.0) return start;
+
+		do
+		{
+			start = result;
+			label_list neigbour = mesh_connectivity_.getNeighbour(result);
+			for (label l : neigbour)
+			{
+				double testMinDist = math::abs(pos - node_positions_[l]);
+				if (testMinDist < minDist)
+				{
+					result = l;
+					minDist = testMinDist;
+				}
+				else if (testMinDist == 0.0) return l;
+			}
+		} while ( start != result );
+
+		return result;
+	}
 };
 
 #endif // MESH_GEOMETRY_H

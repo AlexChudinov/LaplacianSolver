@@ -17,6 +17,11 @@ void PotentialFieldImplementation::setBoundaryVal(const std::string & name, doub
 	basic_field::set_boundary_uniform_val(name, val);
 }
 
+void PotentialFieldImplementation::setBoundaryVal(const std::string & name, const std::vector<double> vals)
+{
+	basic_field::set_boundary_vals(name, vals);
+}
+
 void PotentialFieldImplementation::addBoundary(const std::string & name, const std::set<UINT>& nodeLabels)
 {
 	basic_field::add_boundary(name, nodeLabels);
@@ -41,6 +46,12 @@ std::vector<std::string> PotentialFieldImplementation::getBoundaryNames() const
 
 void PotentialFieldImplementation::diffuse()
 {
-	basic_field::diffuse();
+	basic_field next = basic_field::diffuse();
+	data() = next.data();
+}
+
+double PotentialFieldImplementation::interpolate(double x, double y, double z, UINT * track_label) const
+{
+	return basic_field::interpolate(x, y, z, track_label);
 }
 

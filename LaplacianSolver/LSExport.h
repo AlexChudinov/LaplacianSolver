@@ -54,6 +54,9 @@ public:
 	//Set boundary field values
 	virtual void setBoundaryVal(const std::string& name, double val) = 0;
 
+	//Set boundary field values
+	virtual void setBoundaryVal(const std::string& name, const std::vector<double> vals) = 0;
+
 	//Adds new boundary node labels should be listed
 	virtual void addBoundary(const std::string& name, const std::set<UINT>& nodeLabels) = 0;
 
@@ -65,6 +68,9 @@ public:
 
 	//Make one step of laplacian solver
 	virtual void diffuse() = 0;
+
+	//Interpolate field value at current point
+	virtual double interpolate(double x, double y, double z, UINT* track_label = NULL) const = 0;
 };
 
 #endif // !_LS_EXPORT_H_

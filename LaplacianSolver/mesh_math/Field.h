@@ -51,6 +51,7 @@ public:
 	{}
 
 	const data_vector& data() const { return _data; }
+	data_vector& data() { return _data; }
 
 	/**
 	 * Adds new boundary to a field
@@ -120,12 +121,13 @@ public:
 
 	/**
 	 * Diffusion of a field using squared distances to a neighbour points
+	 * returns new point value
 	 */
-	void diffuse_one_point(uint32_t l1)
+	field_type diffuse_one_point(uint32_t l1) const
 	{
 		switch (_node_types[l1])
 		{
-		case BOUNDARY_FIXED_VALUE: break;
+		case BOUNDARY_FIXED_VALUE: return _data[l1]; //Returns fixed value as it is
 		case INNER_POINT:
 		{
 			double totalSquaredDistance = 0;
@@ -134,11 +136,11 @@ public:
 			{
 				vector3f diff = _geometry.spacePositionOf(l2) - _geometry.spacePositionOf(l1);
 				double sqrDist = diff*diff;
-				fieldVal += sqrDist * _data[l2];
-				totalSquaredDistance += sqrDist;
+				fieldVal += _data[l2] / sqrDist;
+				totalSquaredDistance += 1./sqrDist;
 			};
 			_geometry.visit_neigbour(l1, visitor);
-			_data[l1] = fieldVal / totalSquaredDistance;
+			return fieldVal / totalSquaredDistance;
 		}
 		case BOUNDARY_ZERO_GRADIENT:
 		{
@@ -147,20 +149,65 @@ public:
 			auto visitor = [&](uint32_t l2)
 			{
 				vector3f diff = _geometry.spacePositionOf(l2) - _geometry.spacePositionOf(l1);
-				double sqrDist = _node_types[l2] == BOUNDARY_ZERO_GRADIENT ? diff*diff : 2.*diff*diff;
-				fieldVal += sqrDist * _data[l2];
-				totalSquaredDistance += sqrDist;
+				double sqrDist = _node_types[l2] == BOUNDARY_ZERO_GRADIENT ? diff*diff : diff*diff / 2.;
+				fieldVal += _data[l2] / sqrDist;
+				totalSquaredDistance += 1. / sqrDist;
 			};
 			_geometry.visit_neigbour(l1, visitor);
-			_data[l1] = fieldVal / totalSquaredDistance;
+			return fieldVal / totalSquaredDistance;
 		}
+		default:
+			throw std::runtime_error("Field::diffuse_one_point : Strange node type.");
 		}
 		
 	}
-	void diffuse()
+
+	/**
+	 * Returns diffused field
+	 */
+	field diffuse() const
 	{
+		field result(*this);
 		for (UINT i = 0; i < _data.size(); ++i)
-			diffuse_one_point(i);
+			result._data[i] = diffuse_one_point(i);
+		return result;
+	}
+
+	/**
+	 * Interpolate field value into a given point
+	 * It is better when start_label is a clossest point to a {x,y,z}
+	 */
+	field_type interpolate(double x, double y, double z, uint32_t * track_label = nullptr) const
+	{
+		uint32_t start_label;
+		vector3f pos{ x,y,z };
+
+		if (track_label)
+		{
+			start_label = _geometry.find_closest(x, y, z, *track_label);
+			*track_label = start_label;
+		}
+		else
+		{
+			start_label = _geometry.find_closest(x, y, z);
+		}
+
+		/*double sqrDist =
+			(pos - _geometry.spacePositionOf(start_label))
+			*(pos - _geometry.spacePositionOf(start_label));
+
+		if (sqrDist == 0.0) return _data[start_label]; //Check if it is the exact node position
+		*/
+		double distTotal = 0.;//1. / sqrDist;
+		field_type result = 0.;//_data[start_label] / sqrDist;
+		auto visitor = [&](uint32_t label)->void
+		{
+			double dist = math::abs(pos - _geometry.spacePositionOf(label));
+			distTotal += 1. / dist;
+			result += _data[label] / dist;
+		};
+		_geometry.visit_neigbour(start_label, visitor);
+		return result / distTotal;
 	}
 
 };

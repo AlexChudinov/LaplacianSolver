@@ -3,6 +3,9 @@
 #define _USE_LS_DLL_
 #include <ls_main.h>
 #include <LSExport.h>
+#include <numeric>
+#include <algorithm>
+#include <iterator>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -99,6 +102,23 @@ void readBoundaries(PotentialField* f, std::ostream& readLog, const char* filena
 	in.close();
 }
 
+/**
+ * max difference between vectors
+ */
+double field_diff(const std::vector<double>& v1, const std::vector<double>& v2)
+{
+	struct max : public std::binary_function<double, double, double>
+	{
+		double operator()(double x1, double x2) const { return std::max(x1, x2); }
+	};
+	struct diff : public std::binary_function<double, double, double>
+	{
+		double operator()(double x1, double x2) const { return (x1 - x2) * (x1 - x2); }
+	};
+	return std::inner_product(v1.begin(), v1.end(), v2.begin(), 0.0, 
+		max(), diff());
+}
+
 int main()
 {
 	try 
@@ -108,6 +128,28 @@ int main()
 
 		Mesh* m = readConnectivity(std::cout, "test_files/cube.geom");
 		PotentialField* f = PotentialField::createZeros(m);
+
+		std::pair<V3D, V3D> box = m->getBox();
+
+		std::cout << "Box containing all geometry: "
+			<< "xmin = " << box.first.x << std::endl
+			<< "xmax = " << box.second.x << std::endl
+			<< "ymin = " << box.first.y << std::endl
+			<< "ymax = " << box.second.y << std::endl
+			<< "zmin = " << box.first.z << std::endl
+			<< "zmax = " << box.second.z << std::endl;
+
+		std::vector<V3D> line(100);
+		int n = 0;
+		std::generate(line.begin(), line.end(), [&]()->V3D 
+		{ 
+			double x, y, z;
+			y = (10*box.first.y + 10*box.second.y) / 20.;
+			x = (3*box.first.x + 17*box.second.x) / 20.;
+			z = box.first.z + (box.second.z - box.first.z) / 100. * (n++);
+			return{ x,y,z };
+		});
+
 		Mesh::free(m);
 
 		readBoundaries(f, std::cout, "test_files/cube.rgn");
@@ -115,8 +157,26 @@ int main()
 		//Create field
 		std::vector<std::string> names = f->getBoundaryNames();
 		f->setBoundaryVal(names[0], 1.0);
+		std::cout << "Field calculation: \n";
+		for (int i = 0; i < 10; ++i)
+		{
+			std::vector<double> field = f->getPotentialVals();
+			for (int j = 0; j < 100; ++j) f->diffuse();
+			std::vector<double> field2 = f->getPotentialVals();
+			std::cout << "step: " << i << "diff: " << field_diff(field, field2) << std::endl;
+		}
 
-		f->diffuse();
+		std::vector<double> field_vals(line.size());
+		std::transform(line.begin(), line.end(), field_vals.begin(),
+			[&](V3D pos)->double
+		{
+			return f->interpolate(pos.x, pos.y, pos.z);
+		});
+
+		std::ofstream out;
+		out.open("test.dat");
+		std::copy(field_vals.begin(), field_vals.end(), std::ostream_iterator<double>(out, "\n"));
+		out.close();
 
 		PotentialField::free(f);
 		return 0;

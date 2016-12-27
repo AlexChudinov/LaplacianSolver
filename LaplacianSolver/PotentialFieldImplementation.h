@@ -21,6 +21,8 @@ public:
 
 	void setBoundaryVal(const std::string& name, double val);
 
+	void setBoundaryVal(const std::string& name, const std::vector<double> vals);
+
 	void addBoundary(const std::string& name, const std::set<UINT>& nodeLabels);
 
 	void setBoundaryType(const std::string& name, BOUNDARY_TYPE type);
@@ -28,6 +30,8 @@ public:
 	std::vector<std::string> getBoundaryNames() const;
 
 	void diffuse();
+
+	double interpolate(double x, double y, double z, UINT* track_label) const;
 };
 
 #endif // !_POTENTIAL_FIELD_IMPLEMENTATION_H_
