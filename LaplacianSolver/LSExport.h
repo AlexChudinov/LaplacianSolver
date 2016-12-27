@@ -55,7 +55,7 @@ public:
 	virtual void setBoundaryVal(const std::string& name, double val) = 0;
 
 	//Set boundary field values
-	virtual void setBoundaryVal(const std::string& name, const std::vector<double> vals) = 0;
+	virtual void setBoundaryVal(const std::string& name, const std::vector<double>& vals) = 0;
 
 	//Adds new boundary node labels should be listed
 	virtual void addBoundary(const std::string& name, const std::set<UINT>& nodeLabels) = 0;

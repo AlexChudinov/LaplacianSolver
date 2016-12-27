@@ -17,7 +17,7 @@ void PotentialFieldImplementation::setBoundaryVal(const std::string & name, doub
 	basic_field::set_boundary_uniform_val(name, val);
 }
 
-void PotentialFieldImplementation::setBoundaryVal(const std::string & name, const std::vector<double> vals)
+void PotentialFieldImplementation::setBoundaryVal(const std::string & name, const std::vector<double>& vals)
 {
 	basic_field::set_boundary_vals(name, vals);
 }

@@ -21,7 +21,7 @@ public:
 
 	void setBoundaryVal(const std::string& name, double val);
 
-	void setBoundaryVal(const std::string& name, const std::vector<double> vals);
+	void setBoundaryVal(const std::string& name, const std::vector<double>& vals);
 
 	void addBoundary(const std::string& name, const std::set<UINT>& nodeLabels);
 
