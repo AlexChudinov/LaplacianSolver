@@ -10,6 +10,24 @@
 class LAPLACIAN_SOLVER_EXPORT Graph 
 {
 public:
+	//Adds edge
+	virtual void addEdge(UINT n0, UINT n1) = 0;
+
+	//Adds triangle
+	virtual void addTri(UINT n0, UINT n1, UINT n2) = 0;
+
+	//Adds square
+	virtual void addSqr(UINT n0, UINT n1, UINT n2, UINT n3) = 0;
+
+	//Adds tetrahedra
+	virtual void addTet(UINT n0, UINT n1, UINT n2, UINT n3) = 0;
+
+	//Adds pyramid
+	virtual void addPyr(UINT n0, UINT n1, UINT n2, UINT n3, UINT n4) = 0;
+
+	//Adds wedge
+	virtual void addWedge(UINT n0, UINT n1, UINT n2, UINT n3, UINT n4, UINT n5) = 0;
+
 	//Adds hexahedral
 	virtual void addHexa(UINT n0, UINT n1, UINT n2, UINT n3, UINT n4, UINT n5, UINT n6, UINT n7) = 0;
 
