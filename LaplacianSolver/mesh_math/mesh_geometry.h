@@ -140,6 +140,29 @@ public:
 			return pos*v1 < pos*v2;
 		});
 	}
+
+	//Find closest plane
+	//It is assumed that next and start already correspond to a closest line
+	label find_plane(Float x, Float y, Float z, label start, label next) const
+	{
+		vector3f pos = vector3f{ x,y,z } - node_positions_[start];
+		vector3f e0 = node_positions_[next] - node_positions_[start];
+		//Normalize
+		e0 /= math::abs(e0);
+		
+		//Calculate unbiased system
+		pos -= (e0*pos) * e0;
+		label_list neigbor = mesh_connectivity_.getNeighbour(start);
+		neigbor.erase(next);
+		//Find maximum of projection
+		return *std::max_element(neigbor.begin(), neigbor.end(),
+			[=](label l1, label l2)->bool
+		{
+			vector3f v1 = node_positions_[l1] - node_positions_[start];
+			vector3f v2 = node_positions_[l2] - node_positions_[start];
+			return pos*v1 < pos*v2;
+		});
+	}
 };
 
 #endif // MESH_GEOMETRY_H

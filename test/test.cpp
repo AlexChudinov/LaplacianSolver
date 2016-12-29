@@ -144,7 +144,7 @@ int main()
 		std::generate(line.begin(), line.end(), [&]()->V3D 
 		{ 
 			double x, y, z;
-			x = (10*box.first.x + 10*box.second.x) / 20.;
+			x = (2*box.first.x + 18*box.second.x) / 20.;
 			y = (10*box.first.y + 10*box.second.y) / 20.;
 			z = box.first.z + (box.second.z - box.first.z) / 99. * (n++);
 			return{ x,y,z };
@@ -161,7 +161,7 @@ int main()
 		f->setBoundaryType("F4901.4898", PotentialField::ZERO_GRAD);
 		f->setBoundaryType("F4903.4898", PotentialField::ZERO_GRAD);
 		std::cout << "Field calculation: \n";
-		for (int i = 0; i < 1000; ++i)
+		for (int i = 0; i < 100; ++i)
 		{
 			std::vector<double> field = f->getPotentialVals();
 			f->diffuse();

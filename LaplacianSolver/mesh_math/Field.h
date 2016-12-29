@@ -182,17 +182,29 @@ public:
 		}
 
 		vector3f dp0 = pos - _geometry.spacePositionOf(start_label);
-		if (math::abs(dp0) == 0.0) return _data[start_label];
+		field_type a0 = _data[start_label];
+		if (math::abs(dp0) == 0.0) return a0;
 
 		uint32_t next0_label = _geometry.find_line(x, y, z, start_label);
 
-		double length0 = 
-			math::abs(_geometry.spacePositionOf(next0_label) - _geometry.spacePositionOf(start_label));
-		const vector3f e0 =
-			(_geometry.spacePositionOf(next0_label) - _geometry.spacePositionOf(start_label)) / length0;
+		vector3f e0 = _geometry.spacePositionOf(next0_label) - _geometry.spacePositionOf(start_label);
+		double length0 = math::abs(e0);
+		e0 /= length0;
 		double Prj0 = dp0 * e0;
+		field_type a1 = a0 + (_data[next0_label] - a0) * Prj0 / length0;
+		vector3f dp1 = dp0 - Prj0 * e0;
+		if (math::abs(dp1) == 0.0) return a1;
 
-		return _data[start_label] + (_data[next0_label] - _data[start_label]) * Prj0 / length0;
+		uint32_t next1_label = _geometry.find_plane(x, y, z, start_label, next0_label);
+		vector3f e1 = _geometry.spacePositionOf(next1_label) - _geometry.spacePositionOf(start_label);
+		e1 -= (e1*e0)*e0;
+		double length1 = math::abs(e1);
+		e1 /= length1;
+		double Prj1 = dp1 * e1;
+		field_type a2 = a1 + (_data[next1_label] - a1) * Prj1 / length1;
+		vector3f dp2 = dp1 - Prj1 * e1;
+
+		return a1;
 	}
 
 };
