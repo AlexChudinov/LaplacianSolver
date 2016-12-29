@@ -144,9 +144,9 @@ int main()
 		std::generate(line.begin(), line.end(), [&]()->V3D 
 		{ 
 			double x, y, z;
+			x = (10*box.first.x + 10*box.second.x) / 20.;
 			y = (10*box.first.y + 10*box.second.y) / 20.;
-			x = (3*box.first.x + 17*box.second.x) / 20.;
-			z = box.first.z + (box.second.z - box.first.z) / 100. * (n++);
+			z = box.first.z + (box.second.z - box.first.z) / 99. * (n++);
 			return{ x,y,z };
 		});
 
@@ -156,12 +156,15 @@ int main()
 
 		//Create field
 		std::vector<std::string> names = f->getBoundaryNames();
-		f->setBoundaryVal(names[0], 1.0);
+		f->setBoundaryVal("F4899.4898", 1.0);
+		f->setBoundaryVal("F4902.4898", 1.0);
+		f->setBoundaryType("F4901.4898", PotentialField::ZERO_GRAD);
+		f->setBoundaryType("F4903.4898", PotentialField::ZERO_GRAD);
 		std::cout << "Field calculation: \n";
-		for (int i = 0; i < 10; ++i)
+		for (int i = 0; i < 1000; ++i)
 		{
 			std::vector<double> field = f->getPotentialVals();
-			for (int j = 0; j < 100; ++j) f->diffuse();
+			f->diffuse();
 			std::vector<double> field2 = f->getPotentialVals();
 			std::cout << "step: " << i << "diff: " << field_diff(field, field2) << std::endl;
 		}

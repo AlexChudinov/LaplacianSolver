@@ -92,19 +92,8 @@ public:
 	 */
 	void set_boundary_type(const std::string& name, NODE_TYPE type)
 	{
-		for(uint32_t l : _boundaries.at(name))
-			switch (_node_types[l])
-			{
-			case INNER_POINT:
-			case BOUNDARY_ZERO_GRADIENT:
-				_node_types[l] = type;
-				break;
-			case BOUNDARY_FIXED_VALUE:
-				if(type == INNER_POINT) _node_types[l] = type; //If we want to switch off the boundary
-				break;
-			default:
-				break;
-			}
+		for (uint32_t l : _boundaries.at(name))
+			_node_types[l] = type;
 	}
 
 	/**
@@ -149,7 +138,7 @@ public:
 			auto visitor = [&](uint32_t l2)
 			{
 				vector3f diff = _geometry.spacePositionOf(l2) - _geometry.spacePositionOf(l1);
-				double sqrDist = _node_types[l2] == BOUNDARY_ZERO_GRADIENT ? diff*diff : diff*diff / 2.;
+				double sqrDist = _node_types[l2] == INNER_POINT ? diff*diff / 2 : diff*diff;
 				fieldVal += _data[l2] / sqrDist;
 				totalSquaredDistance += 1. / sqrDist;
 			};
@@ -175,12 +164,12 @@ public:
 
 	/**
 	 * Interpolate field value into a given point
-	 * It is better when start_label is a clossest point to a {x,y,z}
+	 * It is better when track_label is a clossest point to a {x,y,z}
 	 */
 	field_type interpolate(double x, double y, double z, uint32_t * track_label = nullptr) const
 	{
 		uint32_t start_label;
-		vector3f pos{ x,y,z };
+		const vector3f pos{ x,y,z };
 
 		if (track_label)
 		{
@@ -192,22 +181,18 @@ public:
 			start_label = _geometry.find_closest(x, y, z);
 		}
 
-		/*double sqrDist =
-			(pos - _geometry.spacePositionOf(start_label))
-			*(pos - _geometry.spacePositionOf(start_label));
+		vector3f dp0 = pos - _geometry.spacePositionOf(start_label);
+		if (math::abs(dp0) == 0.0) return _data[start_label];
 
-		if (sqrDist == 0.0) return _data[start_label]; //Check if it is the exact node position
-		*/
-		double distTotal = 0.;//1. / sqrDist;
-		field_type result = 0.;//_data[start_label] / sqrDist;
-		auto visitor = [&](uint32_t label)->void
-		{
-			double dist = math::abs(pos - _geometry.spacePositionOf(label));
-			distTotal += 1. / dist;
-			result += _data[label] / dist;
-		};
-		_geometry.visit_neigbour(start_label, visitor);
-		return result / distTotal;
+		uint32_t next0_label = _geometry.find_line(x, y, z, start_label);
+
+		double length0 = 
+			math::abs(_geometry.spacePositionOf(next0_label) - _geometry.spacePositionOf(start_label));
+		const vector3f e0 =
+			(_geometry.spacePositionOf(next0_label) - _geometry.spacePositionOf(start_label)) / length0;
+		double Prj0 = dp0 * e0;
+
+		return _data[start_label] + (_data[next0_label] - _data[start_label]) * Prj0 / length0;
 	}
 
 };
