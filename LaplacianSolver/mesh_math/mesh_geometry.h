@@ -94,31 +94,27 @@ public:
 
 	/**
 	 * Search for a clossest point from the start point
-	 * Returns the label of the point
+	 * Returns the label of that point
 	 */
 	label find_closest(Float x, Float y, Float z, label start = 0) const
 	{
 		const vector3f pos{ x, y, z };
 		label result = start;
-		double minDist = math::abs(pos - node_positions_[start]);
+		double minSqrDist = math::sqr(node_positions_[start] - pos);
 
-		if (minDist == 0.0) return start;
+		if (minSqrDist == 0.0) return start;
 
-		do
+		mesh_connectivity_.bfs_iterative(start, [&](label l)->bool 
 		{
-			start = result;
-			const label_list& neigbour = mesh_connectivity_.getNeighbour(result);
-			for (label l : neigbour)
+			double testSqrDist = math::sqr(node_positions_[l] - pos);
+			if (testSqrDist <= minSqrDist)
 			{
-				double testMinDist = math::abs(pos - node_positions_[l]);
-				if (testMinDist < minDist)
-				{
-					result = l;
-					minDist = testMinDist;
-				}
-				else if (testMinDist == 0.0) return l;
+				minSqrDist = testSqrDist;
+				result = l;
+				return true;
 			}
-		} while ( start != result );
+			return false;
+		});
 
 		return result;
 	}
@@ -137,6 +133,7 @@ public:
 		{
 			vector3f v1 = node_positions_[l1] - node_positions_[start];
 			vector3f v2 = node_positions_[l2] - node_positions_[start];
+			v1 /= math::abs(v1); v2 /= math::abs(v2);
 			return pos*v1 < pos*v2;
 		});
 	}
@@ -160,6 +157,8 @@ public:
 		{
 			vector3f v1 = node_positions_[l1] - node_positions_[start];
 			vector3f v2 = node_positions_[l2] - node_positions_[start];
+			v1 -= (e0*v1) * e0; v2 -= (e0*v2) * e0;
+			v1 /= math::abs(v1); v2 /= math::abs(v2);
 			return pos*v1 < pos*v2;
 		});
 	}

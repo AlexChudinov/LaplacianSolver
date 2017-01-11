@@ -3,6 +3,9 @@
 #define _FIELD_H_
 
 #include <map>
+#include <limits>
+#include <linearAlgebra\matrixTemplate.h>
+
 #include "mesh_geometry.h"
 
 /**
@@ -30,6 +33,7 @@ public:
 	using boundary_entry = std::pair<std::string, node_labels_list>;
 	using boundary_list = std::map<std::string, node_labels_list>;
 	using boundary_iterator = typename node_labels_list::const_iterator;
+	using track_info = std::tuple<field_type, uint32_t, uint32_t, uint32_t, uint32_t>;
 
 private:
 	//Keep reference to a space mesh
@@ -163,50 +167,97 @@ public:
 	}
 
 	/**
+	* Interpolates values using closest point
+	*/
+	track_info closest_point_interpolation(double x, double y, double z, uint32_t start) const
+	{
+		track_info result;
+		std::get<1>(result) = _geometry.find_closest(x, y, z, start);
+		std::get<0>(result) = _data[std::get<1>(result)];
+		return result;
+	}
+	/**
+	* Interpolates values using closest line
+	*/
+	track_info closest_line_interpolation(double x, double y, double z, uint32_t start) const
+	{
+		track_info result = closest_point_interpolation(x, y, z, start);
+		vector3f dp0 = vector3f{ x,y,z } -_geometry.spacePositionOf(std::get<1>(result));
+		if (math::sqr(dp0) != 0.0)
+		{
+			//Correct result
+			std::get<2>(result) = _geometry.find_line(x, y, z, std::get<1>(result));
+			vector3f e0 = _geometry.spacePositionOf(std::get<2>(result)) 
+				- _geometry.spacePositionOf(std::get<1>(result));
+			std::get<0>(result) += (_data[std::get<2>(result)] - std::get<0>(result))
+				* (dp0 * e0) / math::sqr(e0);
+		}
+		return result;
+	}
+	/**
+	 * Interpolates using closest plane
+	 */
+	track_info closest_plane_interpolation(double x, double y, double z, uint32_t start) const
+	{
+		track_info result = closest_line_interpolation(x, y, z, start);
+		vector3f dp0 = vector3f{ x,y,z } -_geometry.spacePositionOf(std::get<1>(result));
+		if (math::sqr(dp0) > std::numeric_limits<double>::epsilon())
+		{
+			vector3f e0 = _geometry.spacePositionOf(std::get<2>(result))
+				- _geometry.spacePositionOf(std::get<1>(result));
+			vector3f dp1 = dp0 - (dp0*e0) *e0 / math::sqr(e0);
+			if (math::sqr(dp1) > std::numeric_limits<double>::epsilon())
+			{
+				std::get<3>(result) = _geometry.find_plane(x, y, z,
+					std::get<1>(result),
+					std::get<2>(result));
+				vector3f e1 = _geometry.spacePositionOf(std::get<3>(result))
+					- _geometry.spacePositionOf(std::get<1>(result)),
+					dp2 = dp1 - (dp1*e1) * e1 / math::sqr(e1),
+					vPos = dp0 - dp2;
+				
+				//Create plane basis
+				vector3f 
+					et0 = e0 / math::abs(e0),
+					et1 = e1 - (e1*et0)*et0; et1 /= math::abs(et1);
+				//Transform all vectors to a new basis
+				math::vector_c<double, 2>
+					plane_e0{ et0*e0, et1*e0 },
+					plane_e1{ et0*e0, et1*e1 },
+					plane_vPos{ et0*vPos, et1*vPos };
+
+				//Find line intersection point
+				math::matrix_c<double, 2, 2> m2x2Eqs;
+				math::matrix_c<double, 2, 2> tm1, tm2;
+				m2x2Eqs.column(0) = plane_e1 - plane_e0; m2x2Eqs.column(1) = -plane_vPos;
+				tm1.column(0) = plane_e0; tm1.column(1) = m2x2Eqs.column(1);
+				tm2.column(0) = m2x2Eqs.column(0); tm2.column(1) = plane_e0;
+
+				double fDet = math::det(m2x2Eqs);
+
+				double
+					t1 = math::det(tm1)/fDet,
+					t2 = math::det(tm2)/fDet;
+
+				double a0 = _data[std::get<1>(result)];
+				double a1 = (_data[std::get<3>(result)] - _data[std::get<2>(result)]) * t1 / math::abs(e1 - e0);
+				std::get<0>(result) = a0 + (a1 - a0) * t2 / math::abs(vPos);
+			}
+		}
+		return result;
+	}
+	/**
 	 * Interpolate field value into a given point
 	 * It is better when track_label is a clossest point to a {x,y,z}
 	 */
 	field_type interpolate(double x, double y, double z, uint32_t * track_label = nullptr) const
 	{
-		uint32_t start_label;
-		const vector3f pos{ x,y,z };
-
-		if (track_label)
-		{
-			start_label = _geometry.find_closest(x, y, z, *track_label);
-			*track_label = start_label;
-		}
-		else
-		{
-			start_label = _geometry.find_closest(x, y, z);
-		}
-
-		vector3f dp0 = pos - _geometry.spacePositionOf(start_label);
-		field_type a0 = _data[start_label];
-		if (math::abs(dp0) == 0.0) return a0;
-
-		uint32_t next0_label = _geometry.find_line(x, y, z, start_label);
-
-		vector3f e0 = _geometry.spacePositionOf(next0_label) - _geometry.spacePositionOf(start_label);
-		double length0 = math::abs(e0);
-		e0 /= length0;
-		double Prj0 = dp0 * e0;
-		field_type a1 = a0 + (_data[next0_label] - a0) * Prj0 / length0;
-		vector3f dp1 = dp0 - Prj0 * e0;
-		if (math::abs(dp1) == 0.0) return a1;
-
-		uint32_t next1_label = _geometry.find_plane(x, y, z, start_label, next0_label);
-		vector3f e1 = _geometry.spacePositionOf(next1_label) - _geometry.spacePositionOf(start_label);
-		e1 -= (e1*e0)*e0;
-		double length1 = math::abs(e1);
-		e1 /= length1;
-		double Prj1 = dp1 * e1;
-		field_type a2 = a1 + (_data[next1_label] - a1) * Prj1 / length1;
-		vector3f dp2 = dp1 - Prj1 * e1;
-
-		return a1;
+		uint32_t start_label = track_label ? *track_label : 0;
+		track_info result = closest_plane_interpolation(x, y, z, start_label);
+		if (track_label) *track_label = std::get<1>(result);
+		return std::get<0>(result);
 	}
 
 };
 
-#endif // !_FIELD_H_
+#endif // !_FIELD_H
