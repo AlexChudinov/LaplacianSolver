@@ -17,7 +17,7 @@ class PotentialFieldImplementation : public PotentialField, public basic_field
 public:
 	PotentialFieldImplementation(Mesh* meshGeom);
 
-	std::vector<double> getPotentialVals() const;
+	const std::vector<double>& getPotentialVals() const;
 
 	void setBoundaryVal(const std::string& name, double val);
 

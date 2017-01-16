@@ -7,7 +7,7 @@ PotentialFieldImplementation::PotentialFieldImplementation(Mesh* meshGeom)
 	_pGeometry(dynamic_cast<MeshImplementation*>(meshGeom)->geometryPtr())
 {}
 
-std::vector<double> PotentialFieldImplementation::getPotentialVals() const
+const std::vector<double>& PotentialFieldImplementation::getPotentialVals() const
 {
 	return basic_field::data();
 }

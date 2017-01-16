@@ -144,11 +144,8 @@ public:
 	{
 		vector3f pos = vector3f{ x,y,z } - node_positions_[start];
 		vector3f e0 = node_positions_[next] - node_positions_[start];
-		//Normalize
-		e0 /= math::abs(e0);
-		
-		//Calculate unbiased system
-		pos -= (e0*pos) * e0;
+		pos -= pos*e0 / math::sqr(e0) * e0;
+
 		label_list neigbor = mesh_connectivity_.getNeighbour(start);
 		neigbor.erase(next);
 		//Find maximum of projection
@@ -157,7 +154,6 @@ public:
 		{
 			vector3f v1 = node_positions_[l1] - node_positions_[start];
 			vector3f v2 = node_positions_[l2] - node_positions_[start];
-			v1 -= (e0*v1) * e0; v2 -= (e0*v2) * e0;
 			v1 /= math::abs(v1); v2 /= math::abs(v2);
 			return pos*v1 < pos*v2;
 		});

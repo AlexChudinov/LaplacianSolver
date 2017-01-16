@@ -67,7 +67,7 @@ public:
 	static void free(PotentialField* f);
 
 	//Get current field values. The indices of the values correspond to the number of labels in a graph
-	virtual std::vector<double> getPotentialVals() const = 0;
+	virtual const std::vector<double>& getPotentialVals() const = 0;
 
 	//Set boundary field values
 	virtual void setBoundaryVal(const std::string& name, double val) = 0;

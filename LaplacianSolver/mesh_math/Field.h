@@ -2,6 +2,10 @@
 #ifndef _FIELD_H_
 #define _FIELD_H_
 
+#ifdef _DEBUG
+	#include <iostream>
+#endif // _DEBUG
+
 #include <map>
 #include <limits>
 #include <linearAlgebra\matrixTemplate.h>
@@ -201,12 +205,14 @@ public:
 	{
 		track_info result = closest_line_interpolation(x, y, z, start);
 		vector3f dp0 = vector3f{ x,y,z } -_geometry.spacePositionOf(std::get<1>(result));
-		if (math::sqr(dp0) > std::numeric_limits<double>::epsilon())
+		double norm = std::max(x, std::max(y, z));
+		norm *= norm;
+		if (math::sqr(dp0) / norm > std::numeric_limits<double>::epsilon() * 100.)
 		{
 			vector3f e0 = _geometry.spacePositionOf(std::get<2>(result))
 				- _geometry.spacePositionOf(std::get<1>(result));
 			vector3f dp1 = dp0 - (dp0*e0) *e0 / math::sqr(e0);
-			if (math::sqr(dp1) > std::numeric_limits<double>::epsilon())
+			if (math::sqr(dp1) / norm > std::numeric_limits<double>::epsilon() * 100.)
 			{
 				std::get<3>(result) = _geometry.find_plane(x, y, z,
 					std::get<1>(result),
@@ -214,7 +220,7 @@ public:
 				vector3f e1 = _geometry.spacePositionOf(std::get<3>(result))
 					- _geometry.spacePositionOf(std::get<1>(result)),
 					dp2 = dp1 - (dp1*e1) * e1 / math::sqr(e1),
-					vPos = dp0 - dp2;
+					vPos = dp0;
 				
 				//Create plane basis
 				vector3f 
@@ -229,7 +235,7 @@ public:
 				//Find line intersection point
 				math::matrix_c<double, 2, 2> m2x2Eqs;
 				math::matrix_c<double, 2, 2> tm1, tm2;
-				m2x2Eqs.column(0) = plane_e1 - plane_e0; m2x2Eqs.column(1) = -plane_vPos;
+				m2x2Eqs.column(0) = plane_e0 - plane_e1; m2x2Eqs.column(1) = -plane_vPos;
 				tm1.column(0) = plane_e0; tm1.column(1) = m2x2Eqs.column(1);
 				tm2.column(0) = m2x2Eqs.column(0); tm2.column(1) = plane_e0;
 
@@ -241,7 +247,7 @@ public:
 
 				double a0 = _data[std::get<1>(result)];
 				double a1 = (_data[std::get<3>(result)] - _data[std::get<2>(result)]) * t1 / math::abs(e1 - e0);
-				std::get<0>(result) = a0 + (a1 - a0) * t2 / math::abs(vPos);
+				std::get<0>(result) = a0 + (a1 - a0) * t2 / math::abs(dp0);
 			}
 		}
 		return result;
@@ -254,6 +260,13 @@ public:
 	{
 		uint32_t start_label = track_label ? *track_label : 0;
 		track_info result = closest_plane_interpolation(x, y, z, start_label);
+
+#ifdef _DEBUG
+		std::cout << "x = " << x << " y = " << y << " z = " 
+			<< z << " Pot: " << std::get<0>(result) << " Node: " 
+			<< std::get<1>(result) << "\n";
+#endif // _DEBUG
+
 		if (track_label) *track_label = std::get<1>(result);
 		return std::get<0>(result);
 	}
