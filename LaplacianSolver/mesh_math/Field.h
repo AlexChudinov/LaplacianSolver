@@ -229,7 +229,7 @@ public:
 				//Transform all vectors to a new basis
 				math::vector_c<double, 2>
 					plane_e0{ et0*e0, et1*e0 },
-					plane_e1{ et0*e0, et1*e1 },
+					plane_e1{ et0*e1, et1*e1 },
 					plane_vPos{ et0*vPos, et1*vPos };
 
 				//Find line intersection point
@@ -246,8 +246,8 @@ public:
 					t2 = math::det(tm2)/fDet;
 
 				double a0 = _data[std::get<1>(result)];
-				double a1 = (_data[std::get<3>(result)] - _data[std::get<2>(result)]) * t1 / math::abs(e1 - e0);
-				std::get<0>(result) = a0 + (a1 - a0) * t2 / math::abs(dp0);
+				double a1 = (_data[std::get<2>(result)] - _data[std::get<3>(result)]) * t1 / math::abs(plane_e1 - plane_e0);
+				std::get<0>(result) = a0 + (a1 - a0) * math::abs(plane_vPos) / t2;
 			}
 		}
 		return result;

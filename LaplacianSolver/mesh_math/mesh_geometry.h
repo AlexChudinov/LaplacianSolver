@@ -19,16 +19,33 @@ public:
     using box3D          = std::pair<vector3f, vector3f>;
     using label_list	 = std::set<label>;
 
+	//Interpolation coefs
+	using interp_coef  = std::pair<label, Float>;
+	using interp_coefs = std::vector<interp_coef>;
+
 private:
     graph mesh_connectivity_;
     node_positions node_positions_;
-
+	
+	//Numeric limit for floating point precision
+	Float m_fEpsilon;
 public:
 	mesh_geometry(const graph& g, const node_positions& np)
-        : mesh_connectivity_(g), node_positions_(np)
+        : mesh_connectivity_(g), node_positions_(np), m_fEpsilon(std::numeric_limits<Float>::epsilon()*100.0)
     { 
 		if(g.size() != np.size()) 
 			throw(std::runtime_error("Sizes of graph and node positions array mismatch!"));
+	}
+
+	//Sets the precision limit
+	void eps(size_t fFactor)
+	{
+		m_fEpsilon = std::numeric_limits<Float>::epsilon()*static_cast<Float>(fFactor);
+	}
+	//Gets the precision limit
+	Float eps() const
+	{
+		return m_fEpsilon;
 	}
 
     /**
@@ -157,6 +174,14 @@ public:
 			v1 /= math::abs(v1); v2 /= math::abs(v2);
 			return pos*v1 < pos*v2;
 		});
+	}
+
+	//Find best tetrahedral for the x,y,z point
+	//First three nodes of the tet were previously found by the find_closest, 
+	//find_line, and find_plane functions
+	label find_tet(Float x, Float y, Float z, label start, label next1, label next2) const
+	{
+
 	}
 };
 
