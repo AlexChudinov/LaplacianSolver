@@ -121,7 +121,8 @@ public:
 
 		if (minSqrDist == 0.0) return start;
 
-		mesh_connectivity_.bfs_iterative(start, [&](label l)->bool 
+		mesh_connectivity_.bfs_iterative(start, 
+			[&](label l)->bool 
 		{
 			double testSqrDist = math::sqr(node_positions_[l] - pos);
 			if (testSqrDist <= minSqrDist)
@@ -140,40 +141,54 @@ public:
 	//Assume, that it was found using function find_closest
 	label find_line(Float x, Float y, Float z, label start) const
 	{
-		//Look into unbiased system
-		const vector3f pos = vector3f{ x,y,z } - node_positions_[start];
-		const label_list& neigbor = mesh_connectivity_.getNeighbour(start);
+		const vector3f pos = vector3f{ x,y,z };
+		label result = *mesh_connectivity_.getNeighbour(start).begin();
+		double minSqrDist = math::sqr(node_positions_[result] - pos);
 
-		//Find maximum of projection
-		return *std::max_element(neigbor.begin(), neigbor.end(),
-			[=](label l1, label l2)->bool
+		mesh_connectivity_.bfs_iterative(result,
+			[&](label l)->bool
 		{
-			vector3f v1 = node_positions_[l1] - node_positions_[start];
-			vector3f v2 = node_positions_[l2] - node_positions_[start];
-			v1 /= math::abs(v1); v2 /= math::abs(v2);
-			return pos*v1 < pos*v2;
+			if (l == start) return true; //Look futher
+			double testSqrDist = math::sqr(node_positions_[l] - pos);
+			if (testSqrDist <= minSqrDist)
+			{
+				minSqrDist = testSqrDist;
+				result = l;
+				return true;
+			}
+			return false;
 		});
+
+		return result;
 	}
 
 	//Find closest plane
 	//It is assumed that next and start already correspond to a closest line
 	label find_plane(Float x, Float y, Float z, label start, label next) const
 	{
-		vector3f pos = vector3f{ x,y,z } - node_positions_[start];
-		vector3f e0 = node_positions_[next] - node_positions_[start];
-		pos -= pos*e0 / math::sqr(e0) * e0;
+		const vector3f pos = vector3f{ x,y,z };
+		typename label_list::const_iterator it = mesh_connectivity_.getNeighbour(start).begin();
+		label result = *it == next ? *(++it) : *it;
+		double minSqrDist = math::sqr(node_positions_[result] - pos);
 
-		label_list neigbor = mesh_connectivity_.getNeighbour(start);
-		neigbor.erase(next);
-		//Find maximum of projection
-		return *std::max_element(neigbor.begin(), neigbor.end(),
-			[=](label l1, label l2)->bool
+		mesh_connectivity_.bfs_iterative(result,
+			[&](label l)->bool
 		{
-			vector3f v1 = node_positions_[l1] - node_positions_[start];
-			vector3f v2 = node_positions_[l2] - node_positions_[start];
-			v1 /= math::abs(v1); v2 /= math::abs(v2);
-			return pos*v1 < pos*v2;
+			if (l == start || l == next ||
+				math::sqr(math::crossProduct(node_positions_[l] - node_positions_[start], 
+					node_positions_[next] - node_positions_[start])) < m_fEpsilon)
+				return true; //Look futher if both this is one of the previous or nodes are on a line
+			double testSqrDist = math::sqr(node_positions_[l] - pos);
+			if (testSqrDist <= minSqrDist)
+			{
+				minSqrDist = testSqrDist;
+				result = l;
+				return true;
+			}
+			return false;
 		});
+
+		return result;
 	}
 
 	//Find best tetrahedral for the x,y,z point
