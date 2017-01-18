@@ -233,11 +233,10 @@ public:
 					plane_vPos{ et0*vPos, et1*vPos };
 
 				//Find line intersection point
-				math::matrix_c<double, 2, 2> m2x2Eqs;
-				math::matrix_c<double, 2, 2> tm1, tm2;
-				m2x2Eqs.column(0) = plane_e0 - plane_e1; m2x2Eqs.column(1) = -plane_vPos;
-				tm1.column(0) = plane_e0; tm1.column(1) = m2x2Eqs.column(1);
-				tm2.column(0) = m2x2Eqs.column(0); tm2.column(1) = plane_e0;
+				math::matrix_c<double, 2, 2> m2x2Eqs, tm1, tm2;
+				m2x2Eqs.column(0) = plane_e1 - plane_e0; m2x2Eqs.column(1) = plane_vPos;
+				tm1.column(0) = plane_e1; tm1.column(1) = m2x2Eqs.column(1);
+				tm2.column(0) = m2x2Eqs.column(0); tm2.column(1) = plane_e1;
 
 				double fDet = math::det(m2x2Eqs);
 
@@ -246,8 +245,8 @@ public:
 					t2 = math::det(tm2)/fDet;
 
 				double a0 = _data[std::get<1>(result)];
-				double a1 = (_data[std::get<2>(result)] - _data[std::get<3>(result)]) * t1 / math::abs(plane_e1 - plane_e0);
-				std::get<0>(result) = a0 + (a1 - a0) * math::abs(plane_vPos) / t2;
+				double a1 = (_data[std::get<2>(result)] - _data[std::get<3>(result)]) * t1;
+				std::get<0>(result) = a0 + (a1 - a0) / t2;
 			}
 		}
 		return result;
