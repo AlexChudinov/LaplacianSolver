@@ -245,7 +245,7 @@ public:
 					t2 = math::det(tm2)/fDet;
 
 				double a0 = _data[std::get<1>(result)];
-				double a1 = (_data[std::get<2>(result)] - _data[std::get<3>(result)]) * t1;
+				double a1 = _data[std::get<3>(result)] + (_data[std::get<2>(result)] - _data[std::get<3>(result)]) * t1;
 				std::get<0>(result) = a0 + (a1 - a0) / t2;
 			}
 		}

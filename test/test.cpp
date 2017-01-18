@@ -144,8 +144,8 @@ int main()
 		std::generate(line.begin(), line.end(), [&]()->V3D 
 		{ 
 			double x, y, z;
-			z = 0.005;// (10 * box.first.z + 10 * box.second.z) / 20.;
-			y = 0.0095; // (10 * box.first.y + 10 * box.second.y) / 20.;
+			z = 0.0025;// (10 * box.first.z + 10 * box.second.z) / 20.;
+			y = 0.009; // (10 * box.first.y + 10 * box.second.y) / 20.;
 			x = box.first.x + (box.second.x - box.first.x) / 100. * (n++);
 			return{ x,y,z };
 		});

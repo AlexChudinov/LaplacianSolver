@@ -174,10 +174,15 @@ public:
 		mesh_connectivity_.bfs_iterative(result,
 			[&](label l)->bool
 		{
-			if (l == start || l == next ||
-				math::sqr(math::crossProduct(node_positions_[l] - node_positions_[start], 
-					node_positions_[next] - node_positions_[start])) < m_fEpsilon)
-				return true; //Look futher if both this is one of the previous or nodes are on a line
+			//Look futher if both this is one of the previous
+			if (l == start || l == next) return true;
+			vector3f
+				v1 = node_positions_[l] - node_positions_[start],
+				v2 = node_positions_[next] - node_positions_[start];
+			
+			//Nodes lie on a one line
+			if (math::crossProduct(v1, v2) < m_fEpsilon) return true;
+
 			double testSqrDist = math::sqr(node_positions_[l] - pos);
 			if (testSqrDist <= minSqrDist)
 			{
@@ -196,7 +201,37 @@ public:
 	//find_line, and find_plane functions
 	label find_tet(Float x, Float y, Float z, label start, label next1, label next2) const
 	{
+		const vector3f pos{ x,y,z };
+		typename label_list::const_iterator it = mesh_connectivity_.getNeighbour(start).begin();
+		while (*it == next1 || *it == next2) ++it;
+		label result = *it;
+		double minSqrDist = math::sqr(node_positions_[result] - pos);
 
+		mesh_connectivity_.bfs_iterative(result,
+			[&](label l)->bool
+		{
+			//Look futher if this is one of the previous
+			if (l == start || l == next1 || l == next2) return true; 
+
+			vector3f
+				v1 = node_positions_[next1] - node_positions_[start],
+				v2 = node_positions_[next2] - node_positions_[start],
+				v3 = node_positions_[l] - node_positions_[start];
+
+			//Look further if all nodes lie in a one plane
+			if(::fabs(math::det(math::matrix_c<double, 3, 3>{v1, v2, v3})) < m_fEpsilon)return true;
+
+			double testSqrDist = math::sqr(node_positions_[l] - pos);
+			if (testSqrDist <= minSqrDist)
+			{
+				minSqrDist = testSqrDist;
+				result = l;
+				return true;
+			}
+			return false;
+		});
+
+		return result;
 	}
 };
 
