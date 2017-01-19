@@ -4,6 +4,7 @@
 #include <map>
 
 #include <linearAlgebra\vectorTemplate.h>
+#include <linearAlgebra\matrixTemplate.h>
 #include <data_structs\graph.h>
 
 /**
@@ -15,7 +16,10 @@ class mesh_geometry
 public:
 	using string         = std::string;
 	using node_labels    = std::vector<label>;
+	using vector2f		 = math::vector_c<Float, 2>;
 	using vector3f       = math::vector_c<Float, 3>;
+	using matrix2x2		 = math::matrix_c<Float, 2, 2>;
+	using matrix3x3		 = math::matrix_c<Float, 3, 3>;
 	using node_positions = std::vector<vector3f>;
 	using graph          = data_structs::graph<label>;
     using box3D          = std::pair<vector3f, vector3f>;
@@ -40,28 +44,46 @@ public:
 		BoundariesMap m_mapBoundariesList;
 		ReversedBoundariesMap m_mapReversedBoundariesList;
 	public:
+		//Creates empty boundary mesh
 		BoundaryMesh(){}
 
+		//Adds new boundary patch
 		void addBoundary(const std::string& strName, const label_list& labels, BoundaryType type = FIXED_VAL)
 		{
+			if (m_mapBoundariesList.find(strName)) removeBoundary(strName);
 			for (label l : labels) m_mapReversedBoundariesList[l].insert(strName);
 			m_mapBoundariesList[strName] = std::make_pair(type, labels);
 		}
 
+		//Removes existing boundary patch
 		void removeBoundary(const std::string& strName)
 		{
-			for (label l : m_mapBoundariesList[strName]) m_mapReversedBoundariesList[l].erase(strName);
+			for (label l : m_mapBoundariesList.at(strName)) m_mapReversedBoundariesList[l].erase(strName);
 			m_mapBoundariesList.erase(strName);
 		}
 
+		//Sets type of a boundary with a name strName
 		void boundaryType(const std::string& strName, BoundaryType type)
 		{
-			m_mapBoundariesList[strName].first = type;
+			m_mapBoundariesList.at(strName).first = type;
 		}
 
+		//Returns type of a boundary with a name strName
 		BoundaryType boundaryType(const std::string& strName) const
 		{
-			return m_mapReversedBoundariesList[strName].first;
+			return m_mapReversedBoundariesList.at(strName).first;
+		}
+
+		//Returns a set of boundaries connected to a given label
+		const NamesList& boundaryNames(label l) const
+		{
+			return m_mapReversedBoundariesList.at(l);
+		}
+
+		//Returns numbers of nodes which are belong to a given boundary
+		const label_list& boundaryLabels(const std::string& strName) const
+		{
+			return m_mapBoundariesList.at(strName);
 		}
 	};
 
