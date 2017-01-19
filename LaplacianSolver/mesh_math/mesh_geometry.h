@@ -1,6 +1,8 @@
 #ifndef MESH_GEOMETRY_H
 #define MESH_GEOMETRY_H
 
+#include <map>
+
 #include <linearAlgebra\vectorTemplate.h>
 #include <data_structs\graph.h>
 
@@ -20,8 +22,48 @@ public:
     using label_list	 = std::set<label>;
 
 	//Interpolation coefs
-	using interp_coef  = std::pair<label, Float>;
-	using interp_coefs = std::vector<interp_coef>;
+	using InterpCoef  = std::pair<label, Float>;
+	using InterpCoefs = std::vector<InterpCoef>;
+
+	//Boundary conditions for the mesh
+	class BoundaryMesh
+	{
+	public:
+		enum BoundaryType { ZERO_GRAD, FIXED_VAL };
+
+		using BoundaryDescription = std::pair<BoundaryType, label_list>;
+		using BoundariesMap = std::map<std::string, BoundaryDescription>;
+		using NamesList = std::set<std::string>;
+		using ReversedBoundariesMap = std::map<label, NamesList>;
+
+	private:
+		BoundariesMap m_mapBoundariesList;
+		ReversedBoundariesMap m_mapReversedBoundariesList;
+	public:
+		BoundaryMesh(){}
+
+		void addBoundary(const std::string& strName, const label_list& labels, BoundaryType type = FIXED_VAL)
+		{
+			for (label l : labels) m_mapReversedBoundariesList[l].insert(strName);
+			m_mapBoundariesList[strName] = std::make_pair(type, labels);
+		}
+
+		void removeBoundary(const std::string& strName)
+		{
+			for (label l : m_mapBoundariesList[strName]) m_mapReversedBoundariesList[l].erase(strName);
+			m_mapBoundariesList.erase(strName);
+		}
+
+		void boundaryType(const std::string& strName, BoundaryType type)
+		{
+			m_mapBoundariesList[strName].first = type;
+		}
+
+		BoundaryType boundaryType(const std::string& strName) const
+		{
+			return m_mapReversedBoundariesList[strName].first;
+		}
+	};
 
 private:
     graph mesh_connectivity_;
@@ -181,7 +223,7 @@ public:
 				v2 = node_positions_[next] - node_positions_[start];
 			
 			//Nodes lie on a one line
-			if (math::crossProduct(v1, v2) < m_fEpsilon) return true;
+			if (math::sqr(math::crossProduct(v1, v2)) < m_fEpsilon) return true;
 
 			double testSqrDist = math::sqr(node_positions_[l] - pos);
 			if (testSqrDist <= minSqrDist)
