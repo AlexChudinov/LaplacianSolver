@@ -258,16 +258,15 @@ public:
 	field_type interpolate(double x, double y, double z, uint32_t * track_label = nullptr) const
 	{
 		uint32_t start_label = track_label ? *track_label : 0;
-		track_info result = closest_plane_interpolation(x, y, z, start_label);
+		//track_info result = closest_plane_interpolation(x, y, z, start_label);
+		mesh_geom::InterpCoefs coefs = _geometry.interpCoefs(x, y, z, start_label);
 
-#ifdef _DEBUG
-		std::cout << "x = " << x << " y = " << y << " z = " 
-			<< z << " Pot: " << std::get<0>(result) << " Node: " 
-			<< std::get<1>(result) << "\n";
-#endif // _DEBUG
-
-		if (track_label) *track_label = std::get<1>(result);
-		return std::get<0>(result);
+		if (track_label) *track_label = coefs.begin()->first;
+		return std::accumulate(coefs.begin(),coefs.end(),0.0,
+			[&](field_type val, mesh_geom::InterpCoef c)->field_type
+		{
+			return val += _data[c.first] * c.second;
+		});
 	}
 
 };

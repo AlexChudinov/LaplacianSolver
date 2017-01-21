@@ -139,14 +139,14 @@ int main()
 			<< "zmin = " << box.first.z << std::endl
 			<< "zmax = " << box.second.z << std::endl;
 
-		std::vector<V3D> line(101);
+		std::vector<V3D> line(20);
 		int n = 0;
 		std::generate(line.begin(), line.end(), [&]()->V3D 
 		{ 
 			double x, y, z;
-			z = 0.0025;// (10 * box.first.z + 10 * box.second.z) / 20.;
-			y = 0.009; // (10 * box.first.y + 10 * box.second.y) / 20.;
-			x = box.first.x + (box.second.x - box.first.x) / 100. * (n++);
+			x = box.first.x + (box.second.x - box.first.x) / 19. * (n++);
+			y = 0.0043; //box.first.y + (box.second.y - box.first.y) / 19. * (n);
+			z = 0.0043; // box.first.z + (box.second.z - box.first.z) / 19. * (n++);
 			return{ x,y,z };
 		});
 
@@ -156,14 +156,14 @@ int main()
 
 		//Create field
 		std::vector<std::string> names = f->getBoundaryNames();
-		f->setBoundaryType("F21.16", PotentialField::ZERO_GRAD);
-		f->setBoundaryType("F19.16", PotentialField::ZERO_GRAD);
-		f->setBoundaryType("F18.16", PotentialField::ZERO_GRAD);
-		f->setBoundaryType("F22.16", PotentialField::ZERO_GRAD);
+		//f->setBoundaryType("F21.16", PotentialField::ZERO_GRAD);
+		//f->setBoundaryType("F19.16", PotentialField::ZERO_GRAD);
+		//f->setBoundaryType("F18.16", PotentialField::ZERO_GRAD);
+		//f->setBoundaryType("F22.16", PotentialField::ZERO_GRAD);
 		f->setBoundaryVal("F20.16", 1.0);
-		f->setBoundaryVal("F17.16", -1.0);
-		f->setBoundaryType("F20.16", PotentialField::FIXED_VAL);
-		f->setBoundaryType("F17.16", PotentialField::FIXED_VAL);
+		//f->setBoundaryVal("F17.16", -1.0);
+		//f->setBoundaryType("F20.16", PotentialField::FIXED_VAL);
+		//f->setBoundaryType("F17.16", PotentialField::FIXED_VAL);
 		std::cout << "Field calculation: \n";
 		for (int i = 0; i < 100; ++i)
 		{

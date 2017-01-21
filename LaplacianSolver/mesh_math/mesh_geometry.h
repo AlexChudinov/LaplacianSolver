@@ -4,7 +4,7 @@
 #include <map>
 
 #include <linearAlgebra\vectorTemplate.h>
-#include <linearAlgebra\matrixTemplate.h>
+#include <linearAlgebra\linearInterpolation.h>
 #include <data_structs\graph.h>
 
 /**
@@ -16,10 +16,7 @@ class mesh_geometry
 public:
 	using string         = std::string;
 	using node_labels    = std::vector<label>;
-	using vector2f		 = math::vector_c<Float, 2>;
 	using vector3f       = math::vector_c<Float, 3>;
-	using matrix2x2		 = math::matrix_c<Float, 2, 2>;
-	using matrix3x3		 = math::matrix_c<Float, 3, 3>;
 	using node_positions = std::vector<vector3f>;
 	using graph          = data_structs::graph<label>;
     using box3D          = std::pair<vector3f, vector3f>;
@@ -27,7 +24,7 @@ public:
 
 	//Interpolation coefs
 	using InterpCoef  = std::pair<label, Float>;
-	using InterpCoefs = std::vector<InterpCoef>;
+	using InterpCoefs = std::map<label, Float>;
 
 	//Boundary conditions for the mesh
 	class BoundaryMesh
@@ -231,21 +228,26 @@ public:
 	label find_plane(Float x, Float y, Float z, label start, label next) const
 	{
 		const vector3f pos = vector3f{ x,y,z };
+		double norm = *std::max_element(pos.begin(), pos.end());
 		typename label_list::const_iterator it = mesh_connectivity_.getNeighbour(start).begin();
-		label result = *it == next ? *(++it) : *it;
+
+		auto check_label = [&](label l)->bool
+		{
+			vector3f
+				v1 = node_positions_[l] - node_positions_[start],
+				v2 = node_positions_[next] - node_positions_[start];
+			return math::sqr(math::crossProduct(v1, v2)) > m_fEpsilon*norm;
+		};
+		while (!check_label(*it)) it++;
+
+		label result = *it;
 		double minSqrDist = math::sqr(node_positions_[result] - pos);
 
 		mesh_connectivity_.bfs_iterative(result,
 			[&](label l)->bool
 		{
 			//Look futher if both this is one of the previous
-			if (l == start || l == next) return true;
-			vector3f
-				v1 = node_positions_[l] - node_positions_[start],
-				v2 = node_positions_[next] - node_positions_[start];
-			
-			//Nodes lie on a one line
-			if (math::sqr(math::crossProduct(v1, v2)) < m_fEpsilon) return true;
+			if (!check_label(l)) return true;
 
 			double testSqrDist = math::sqr(node_positions_[l] - pos);
 			if (testSqrDist <= minSqrDist)
@@ -266,24 +268,28 @@ public:
 	label find_tet(Float x, Float y, Float z, label start, label next1, label next2) const
 	{
 		const vector3f pos{ x,y,z };
+		double norm = *std::max_element(pos.begin(), pos.end()); norm *= norm;
 		typename label_list::const_iterator it = mesh_connectivity_.getNeighbour(start).begin();
-		while (*it == next1 || *it == next2) ++it;
+
+		auto check_label = [&](label l)->bool
+		{
+			vector3f
+				v1 = node_positions_[next1] - node_positions_[start],
+				v2 = node_positions_[next2] - node_positions_[start],				
+				v3 = node_positions_[l] - node_positions_[start];
+			return ::fabs(math::det(math::matrix_c<Float, 3, 3>{ v1, v2, v3 })) > m_fEpsilon*norm;
+		};
+
+		while (!check_label(*it)) it++;
+
 		label result = *it;
 		double minSqrDist = math::sqr(node_positions_[result] - pos);
 
 		mesh_connectivity_.bfs_iterative(result,
 			[&](label l)->bool
 		{
-			//Look futher if this is one of the previous
-			if (l == start || l == next1 || l == next2) return true; 
-
-			vector3f
-				v1 = node_positions_[next1] - node_positions_[start],
-				v2 = node_positions_[next2] - node_positions_[start],
-				v3 = node_positions_[l] - node_positions_[start];
-
 			//Look further if all nodes lie in a one plane
-			if(::fabs(math::det(math::matrix_c<double, 3, 3>{v1, v2, v3})) < m_fEpsilon)return true;
+			if(!check_label(l)) return true;
 
 			double testSqrDist = math::sqr(node_positions_[l] - pos);
 			if (testSqrDist <= minSqrDist)
@@ -296,6 +302,63 @@ public:
 		});
 
 		return result;
+	}
+
+	/**
+	 * Returns coeffs for field interpolation
+	 */
+	InterpCoefs interpCoefs(Float x, Float y, Float z, label start = 0) const
+	{
+		label l0, l1, l2, l3;
+		vector3f pos{ x,y,z };
+		Float norm = *std::max_element(pos.begin(), pos.end());
+		norm = norm == 0.0 ? 1.0 : norm *= norm;
+		l0 = find_closest(x, y, z, start);
+		vector3f dp0 = pos - node_positions_[l0];
+		if (math::sqr(dp0) / norm < m_fEpsilon)
+		{
+			return InterpCoefs{ InterpCoef(l0, 1.0) };
+		}
+		else
+		{
+			l1 = find_line(x, y, z, l0);
+			vector3f e0 = node_positions_[l1] - node_positions_[l0];
+			std::tuple<Float, Float> coefs
+				= math::lineInterpolation(pos, node_positions_[l0], node_positions_[l1]);
+			vector3f dp1 = dp0 - (dp0 * e0) * e0 / math::sqr(e0);
+			if(math::sqr(dp1) / norm < m_fEpsilon) return InterpCoefs
+			{ 
+				InterpCoef(l0, std::get<0>(coefs)), 
+				InterpCoef(l1, std::get<1>(coefs)) 
+			};
+			else
+			{
+				l2 = find_plane(x, y, z, l0, l1);
+				vector3f e1 = node_positions_[l2] - node_positions_[l0];
+				std::tuple<Float, Float, Float> coefs
+					= math::triInterpolation(pos, node_positions_[l0], node_positions_[l1], node_positions_[l2]);
+				vector3f dp2 = dp1 - (dp1 * e1) * e1 / math::sqr(e1);
+				if(math::sqr(dp2)/norm < m_fEpsilon) return InterpCoefs
+				{
+					InterpCoef(l0, std::get<0>(coefs)),
+					InterpCoef(l1, std::get<1>(coefs)),
+					InterpCoef(l2, std::get<2>(coefs))
+				};
+				else
+				{
+					l3 = find_tet(x, y, z, l0, l1, l2);
+					std::tuple<Float, Float, Float, Float> coefs
+						= math::tetInterpolation(pos, node_positions_[l0], node_positions_[l1], node_positions_[l2], node_positions_[l3]);
+					return InterpCoefs
+					{
+						InterpCoef(l0, std::get<0>(coefs)),
+						InterpCoef(l1, std::get<1>(coefs)),
+						InterpCoef(l2, std::get<2>(coefs)),
+						InterpCoef(l3, std::get<3>(coefs))
+					};
+				}
+			}
+		}
 	}
 };
 
