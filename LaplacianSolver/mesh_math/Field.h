@@ -7,20 +7,11 @@
 #endif // _DEBUG
 
 #include <map>
+#include <memory>
 #include <limits>
 #include <linearAlgebra\matrixTemplate.h>
 
 #include "mesh_geometry.h"
-
-/**
- *  Type of the field node
- */
-enum  NODE_TYPE : uint8_t
-{
-	INNER_POINT = 0x00,
-	BOUNDARY_ZERO_GRADIENT = 0x01,
-	BOUNDARY_FIXED_VALUE = 0x02
-};
 
 /**
 * Field manipulation class
@@ -32,16 +23,15 @@ class field
 public:
 	using mesh_geom = mesh_geometry<double, uint32_t>;
 	using data_vector = std::vector<field_type>;
-	using node_types_list = std::vector<NODE_TYPE>;
+	using node_types_list = std::vector<bool>; //true if it is inner point and false if it is boundary
 	using node_labels_list = std::set<uint32_t>;
 	using boundary_entry = std::pair<std::string, node_labels_list>;
 	using boundary_list = std::map<std::string, node_labels_list>;
-	using boundary_iterator = typename node_labels_list::const_iterator;
-	using track_info = std::tuple<field_type, uint32_t, uint32_t, uint32_t, uint32_t>;
 
+	using PtrMesh = std::shared_ptr<mesh_geom>;
 private:
 	//Keep reference to a space mesh
-	const mesh_geom& _geometry;
+	PtrMesh m_pMeshGeometry;
 
 
 	data_vector _data; //Field data itself
@@ -51,9 +41,9 @@ public:
 	/**
 	 * Creates zero filled field
 	 */
-	field(const mesh_geom& geometry_)
+	field(const PtrMesh& meshGeometry)
 		: 
-		_geometry(geometry_), 
+		m_pMeshGeometry(meshGeometry), 
 		_data(geometry_.size(), field_type(0.0)),
 		_node_types(geometry_.size(), INNER_POINT)
 	{}
@@ -170,87 +160,6 @@ public:
 		return result;
 	}
 
-	/**
-	* Interpolates values using closest point
-	*/
-	track_info closest_point_interpolation(double x, double y, double z, uint32_t start) const
-	{
-		track_info result;
-		std::get<1>(result) = _geometry.find_closest(x, y, z, start);
-		std::get<0>(result) = _data[std::get<1>(result)];
-		return result;
-	}
-	/**
-	* Interpolates values using closest line
-	*/
-	track_info closest_line_interpolation(double x, double y, double z, uint32_t start) const
-	{
-		track_info result = closest_point_interpolation(x, y, z, start);
-		vector3f dp0 = vector3f{ x,y,z } -_geometry.spacePositionOf(std::get<1>(result));
-		if (math::sqr(dp0) != 0.0)
-		{
-			//Correct result
-			std::get<2>(result) = _geometry.find_line(x, y, z, std::get<1>(result));
-			vector3f e0 = _geometry.spacePositionOf(std::get<2>(result)) 
-				- _geometry.spacePositionOf(std::get<1>(result));
-			std::get<0>(result) += (_data[std::get<2>(result)] - std::get<0>(result))
-				* (dp0 * e0) / math::sqr(e0);
-		}
-		return result;
-	}
-	/**
-	 * Interpolates using closest plane
-	 */
-	track_info closest_plane_interpolation(double x, double y, double z, uint32_t start) const
-	{
-		track_info result = closest_line_interpolation(x, y, z, start);
-		vector3f dp0 = vector3f{ x,y,z } -_geometry.spacePositionOf(std::get<1>(result));
-		double norm = std::max(x, std::max(y, z));
-		norm *= norm;
-		if (math::sqr(dp0) / norm > std::numeric_limits<double>::epsilon() * 100.)
-		{
-			vector3f e0 = _geometry.spacePositionOf(std::get<2>(result))
-				- _geometry.spacePositionOf(std::get<1>(result));
-			vector3f dp1 = dp0 - (dp0*e0) *e0 / math::sqr(e0);
-			if (math::sqr(dp1) / norm > std::numeric_limits<double>::epsilon() * 100.)
-			{
-				std::get<3>(result) = _geometry.find_plane(x, y, z,
-					std::get<1>(result),
-					std::get<2>(result));
-				vector3f e1 = _geometry.spacePositionOf(std::get<3>(result))
-					- _geometry.spacePositionOf(std::get<1>(result)),
-					dp2 = dp1 - (dp1*e1) * e1 / math::sqr(e1),
-					vPos = dp0;
-				
-				//Create plane basis
-				vector3f 
-					et0 = e0 / math::abs(e0),
-					et1 = e1 - (e1*et0)*et0; et1 /= math::abs(et1);
-				//Transform all vectors to a new basis
-				math::vector_c<double, 2>
-					plane_e0{ et0*e0, et1*e0 },
-					plane_e1{ et0*e1, et1*e1 },
-					plane_vPos{ et0*vPos, et1*vPos };
-
-				//Find line intersection point
-				math::matrix_c<double, 2, 2> m2x2Eqs, tm1, tm2;
-				m2x2Eqs.column(0) = plane_e1 - plane_e0; m2x2Eqs.column(1) = plane_vPos;
-				tm1.column(0) = plane_e1; tm1.column(1) = m2x2Eqs.column(1);
-				tm2.column(0) = m2x2Eqs.column(0); tm2.column(1) = plane_e1;
-
-				double fDet = math::det(m2x2Eqs);
-
-				double
-					t1 = math::det(tm1)/fDet,
-					t2 = math::det(tm2)/fDet;
-
-				double a0 = _data[std::get<1>(result)];
-				double a1 = _data[std::get<3>(result)] + (_data[std::get<2>(result)] - _data[std::get<3>(result)]) * t1;
-				std::get<0>(result) = a0 + (a1 - a0) / t2;
-			}
-		}
-		return result;
-	}
 	/**
 	 * Interpolate field value into a given point
 	 * It is better when track_label is a clossest point to a {x,y,z}

@@ -139,14 +139,14 @@ int main()
 			<< "zmin = " << box.first.z << std::endl
 			<< "zmax = " << box.second.z << std::endl;
 
-		std::vector<V3D> line(20);
+		std::vector<V3D> line(200);
 		int n = 0;
 		std::generate(line.begin(), line.end(), [&]()->V3D 
 		{ 
 			double x, y, z;
-			x = box.first.x + (box.second.x - box.first.x) / 19. * (n++);
-			y = 0.0043; //box.first.y + (box.second.y - box.first.y) / 19. * (n);
-			z = 0.0043; // box.first.z + (box.second.z - box.first.z) / 19. * (n++);
+			x = box.first.x + (box.second.x - box.first.x) / 199. * (n);
+			y = box.first.y + (box.second.y - box.first.y) / 199. * (n);
+			z = box.first.z + (box.second.z - box.first.z) / 199. * (n++);
 			return{ x,y,z };
 		});
 
