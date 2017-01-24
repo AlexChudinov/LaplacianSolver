@@ -29,6 +29,7 @@ public:
 	//Boundary conditions for the mesh
 	class BoundaryMesh
 	{
+		const mesh_geometry& m_mesh;
 	public:
 		enum BoundaryType { ZERO_GRAD, FIXED_VAL };
 
@@ -36,18 +37,22 @@ public:
 		using BoundariesMap = std::map<std::string, BoundaryDescription>;
 		using NamesList = std::set<std::string>;
 		using ReversedBoundariesMap = std::map<label, NamesList>;
+		using iterator = typename ReversedBoundariesMap::iterator;
+		using const_iterator = typename ReversedBoundariesMap::const_iterator;
 
 	private:
 		BoundariesMap m_mapBoundariesList;
 		ReversedBoundariesMap m_mapReversedBoundariesList;
 	public:
 		//Creates empty boundary mesh
-		BoundaryMesh(){}
+		BoundaryMesh(const mesh_geometry& mesh):m_mesh(mesh){}
 
 		//Adds new boundary patch
 		void addBoundary(const std::string& strName, const label_list& labels, BoundaryType type = FIXED_VAL)
 		{
-			if (m_mapBoundariesList.find(strName)) removeBoundary(strName);
+			if (*labels.rbegin() >= m_mesh.size())
+				throw std::runtime_error("BoundaryMesh::addBoundary: Too big label for used mesh.");
+			if (m_mapBoundariesList.find(strName) != m_mapBoundariesList.end()) removeBoundary(strName);
 			for (label l : labels) m_mapReversedBoundariesList[l].insert(strName);
 			m_mapBoundariesList[strName] = std::make_pair(type, labels);
 		}
@@ -55,7 +60,7 @@ public:
 		//Removes existing boundary patch
 		void removeBoundary(const std::string& strName)
 		{
-			for (label l : m_mapBoundariesList.at(strName)) m_mapReversedBoundariesList[l].erase(strName);
+			for (label l : m_mapBoundariesList.at(strName).second) m_mapReversedBoundariesList[l].erase(strName);
 			m_mapBoundariesList.erase(strName);
 		}
 
@@ -68,7 +73,7 @@ public:
 		//Returns type of a boundary with a name strName
 		BoundaryType boundaryType(const std::string& strName) const
 		{
-			return m_mapReversedBoundariesList.at(strName).first;
+			return m_mapBoundariesList.at(strName).first;
 		}
 
 		//Returns a set of boundaries connected to a given label
@@ -82,6 +87,12 @@ public:
 		{
 			return m_mapBoundariesList.at(strName);
 		}
+
+		//Get iterators for boundary
+		const_iterator begin() const { return m_mapReversedBoundariesList.begin(); }
+ 		iterator begin() { return m_mapReversedBoundariesList.begin(); }
+		const_iterator end() const { return m_mapReversedBoundariesList.end(); }
+		iterator end() { return m_mapReversedBoundariesList.end(); }
 	};
 
 private:
@@ -107,6 +118,12 @@ public:
 	Float eps() const
 	{
 		return m_fEpsilon;
+	}
+
+	//Creates boundary conditions for given mesh
+	BoundaryMesh createBoundary() const
+	{
+		return BoundaryMesh(*this);
 	}
 
     /**

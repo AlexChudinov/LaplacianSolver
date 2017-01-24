@@ -24,12 +24,11 @@ public:
 	using mesh_geom = mesh_geometry<double, uint32_t>;
 	using data_vector = std::vector<field_type>;
 	using node_types_list = std::vector<bool>; //true if it is inner point and false if it is a boundary
-	using node_labels_list = std::map<uint32_t, field_type>;
-	using boundary_entry = std::pair<std::string, node_labels_list>;
-	using boundary_list = std::map<std::string, node_labels_list>;
+	using node_labels_list = std::set<uint32_t>;
 	
 	using BoundaryMesh = typename mesh_geom::BoundaryMesh;
 	using MeshSharedPtr = std::shared_ptr<mesh_geom>;
+	using BoundaryValues = std::map<std::string, std::map<uint32_t, field_type>>;
 private:
 	//Keep reference to a space mesh
 	MeshSharedPtr m_pMeshGeometry;
@@ -37,16 +36,17 @@ private:
 
 	data_vector _data; //Field data itself
 	node_types_list _node_types; //Types of a field nodes
-	boundary_list _boundaries; //A list of all field boundaries
+	BoundaryValues m_boundaryFieldVals;
 public:
 	/**
 	 * Creates zero filled field
 	 */
 	field(const MeshSharedPtr& meshGeometry)
 		: 
-		m_pMeshGeometry(meshGeometry), 
-		_data(geometry_.size(), field_type(0.0)),
-		_node_types(geometry_.size(), true)
+		m_pMeshGeometry(meshGeometry),
+		m_boundaryMesh(meshGeometry->createBoundary()),
+		_data(m_pMeshGeometry->size(), field_type(0.0)),
+		_node_types(m_pMeshGeometry->size(), true)
 	{}
 
 	const data_vector& data() const { return _data; }
@@ -55,99 +55,107 @@ public:
 	/**
 	 * Adds new boundary to a field
 	 */
-	void add_boundary(const std::string& name, const node_labels_list& nodes)
+	void add_boundary(const std::string& sName, const node_labels_list& labels)
 	{
-		std::set<uint32_t> labels;
-		m_boundaryMesh.addBoundary(name, )
+		m_boundaryMesh.addBoundary(sName, labels);
+		auto& boundaryPatch = m_boundaryFieldVals[sName];
+		for (auto l : labels)
+		{
+			boundaryPatch[l] = field_type(0.0);
+			_node_types[l] = false;
+		}
 	}
 
 	/**
-	 * Set values on a boundary
+	 * Sets values on a boundary
 	 */
-	void set_boundary_uniform_val(const std::string& name, const field_type& val)
+	void set_boundary_uniform_val(const std::string& sName, const field_type& val)
 	{
-			for (uint32_t l : _boundaries.at(name)) _data[l] = val;
+		auto& boundaryPatch = m_boundaryFieldVals.at(sName);
+		for (auto& boundaryNode : boundaryPatch) boundaryNode.second = val;
 	}
 
-	void set_boundary_vals(const std::string& name, const data_vector& vals)
+	void set_boundary_vals(const std::string& sName, const data_vector& vals)
 	{
-		node_labels_list ls = _boundaries.at(name);
-		if (vals.size() != ls .size())
+		auto& boundaryPatch = m_boundaryFieldVals.at(sName);
+		if (vals.size() != boundaryPatch.size())
 			throw std::runtime_error("Boundary and input vector sizes mismatch.\n");
 		size_t i = 0;
-		for (uint32_t l : ls) _data[l] = vals[i++];
-	}
-
-	/**
-	 * Get values on a boundary
-	 */
-	data_vector get_boundary_vals(const std::string& name) const
-	{
-		return data_vector(_boundaries.at(name).begin(), _boundaries.at(name).end());
+		for (auto& boundaryNode : boundaryPatch) boundaryNode.second = vals[i++];
 	}
 
 	/**
 	 * Sets a boundary type
 	 */
-	void set_boundary_type(const std::string& name, NODE_TYPE type)
+	void set_boundary_type(const std::string& sName, BoundaryMesh::BoundaryType type)
 	{
-		for (uint32_t l : _boundaries.at(name))
-			_node_types[l] = type;
+		m_boundaryMesh.boundaryType(sName, type);
 	}
 
-	/**
-	 * Names of boundary patches
-	 */
-	std::vector<std::string> get_boundary_names() const
+	//Applies boundary conditions to a mesh
+	//Puts averaged fixed values at FIXED_VAL boundary conditions and initializes ZERO_GRAD with zeros
+	void applyBoundaryConditions()
 	{
-		std::vector<std::string> names(_boundaries.size());
-		size_t i = 0;
-		for (const boundary_entry& entry : _boundaries)
-			names[i++] = entry.first;
-		return names;
+		for (const auto& boundaryLabel : m_boundaryMesh)
+		{
+			int primaryCondition = 0;
+			field_type primaryCondAcc = 0.0;
+			const typename BoundaryMesh::NamesList& listNames = boundaryLabel.second;
+			for (const auto& name : listNames)
+			{
+				switch (m_boundaryMesh.boundaryType(name))
+				{
+				case BoundaryMesh::ZERO_GRAD:
+					break;
+				case BoundaryMesh::FIXED_VAL:
+					primaryCondAcc += m_boundaryFieldVals[name][boundaryLabel.first];
+					primaryCondition++;
+					break;
+				default:
+					throw std::runtime_error("Field::applyBoundaryConditions : Unexpected boundary condition type.");
+				}
+			}
+			if (primaryCondition != 0)
+				_data[boundaryLabel.first] = primaryCondAcc / primaryCondition;
+			else
+				_data[boundaryLabel.first] = 0;
+		}
 	}
 
 	/**
 	 * Diffusion of a field using squared distances to a neighbour points
 	 * returns new point value
 	 */
-	field_type diffuse_one_point(uint32_t l1) const
+	field_type diffuse_one_point(uint32_t l) const
 	{
-		switch (_node_types[l1])
+		double totalSqrDist = 0.0;
+		field_type result = 0.0;
+		if (_node_types[l])
 		{
-		case BOUNDARY_FIXED_VALUE: return _data[l1]; //Returns fixed value as it is
-		case INNER_POINT:
-		{
-			double totalSquaredDistance = 0;
-			field_type fieldVal = 0;
-			auto visitor = [&](uint32_t l2)
+			m_pMeshGeometry->visit_neigbour(l, [&](uint32_t l1)
 			{
-				vector3f diff = _geometry.spacePositionOf(l2) - _geometry.spacePositionOf(l1);
-				double sqrDist = diff*diff;
-				fieldVal += _data[l2] / sqrDist;
-				totalSquaredDistance += 1./sqrDist;
-			};
-			_geometry.visit_neigbour(l1, visitor);
-			return fieldVal / totalSquaredDistance;
+				double w = 1 / 
+					math::sqr(m_pMeshGeometry->spacePositionOf(l1) - m_pMeshGeometry->spacePositionOf(l));
+				result += _data[l1] * w;
+				totalSqrDist += w;
+			});
+
 		}
-		case BOUNDARY_ZERO_GRADIENT:
+		else
 		{
-			double totalSquaredDistance = 0;
-			field_type fieldVal = 0;
-			auto visitor = [&](uint32_t l2)
+			for (const auto& name : m_boundaryMesh.boundaryNames(l))
 			{
-				vector3f diff = _geometry.spacePositionOf(l2) - _geometry.spacePositionOf(l1);
-				double sqrDist = _node_types[l2] == INNER_POINT ? diff*diff / 2 : diff*diff;
-				fieldVal += _data[l2] / sqrDist;
-				totalSquaredDistance += 1. / sqrDist;
-			};
-			_geometry.visit_neigbour(l1, visitor);
-			return fieldVal / totalSquaredDistance;
+				if (m_boundaryMesh.boundaryType(name) == BoundaryMesh::FIXED_VAL) return _data[l];
+			}
+			m_pMeshGeometry->visit_neigbour(l, [&](uint32_t l1)
+			{
+				double w = 1 /
+					math::sqr(m_pMeshGeometry->spacePositionOf(l1) - m_pMeshGeometry->spacePositionOf(l));
+				result += _node_types[l1] ? _data[l1] * 2.0 * w : _data[l1] * w;
+				totalSqrDist += _node_types[l1] ? 2.0 * w : w;
+			});
 		}
-		default:
-			throw std::runtime_error("Field::diffuse_one_point : Strange node type.");
-		}
-		
+		return result / totalSqrDist;
 	}
 
 	/**
@@ -169,7 +177,7 @@ public:
 	{
 		uint32_t start_label = track_label ? *track_label : 0;
 		//track_info result = closest_plane_interpolation(x, y, z, start_label);
-		mesh_geom::InterpCoefs coefs = _geometry.interpCoefs(x, y, z, start_label);
+		mesh_geom::InterpCoefs coefs = m_pMeshGeometry->interpCoefs(x, y, z, start_label);
 
 		if (track_label) *track_label = coefs.begin()->first;
 		return std::accumulate(coefs.begin(),coefs.end(),0.0,

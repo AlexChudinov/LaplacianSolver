@@ -155,7 +155,6 @@ int main()
 		readBoundaries(f, std::cout, "test_files/cube.rgn");
 
 		//Create field
-		std::vector<std::string> names = f->getBoundaryNames();
 		//f->setBoundaryType("F21.16", PotentialField::ZERO_GRAD);
 		//f->setBoundaryType("F19.16", PotentialField::ZERO_GRAD);
 		//f->setBoundaryType("F18.16", PotentialField::ZERO_GRAD);
@@ -165,6 +164,7 @@ int main()
 		//f->setBoundaryType("F20.16", PotentialField::FIXED_VAL);
 		//f->setBoundaryType("F17.16", PotentialField::FIXED_VAL);
 		std::cout << "Field calculation: \n";
+		f->applyBoundaryConditions();
 		for (int i = 0; i < 100; ++i)
 		{
 			std::vector<double> field = f->getPotentialVals();

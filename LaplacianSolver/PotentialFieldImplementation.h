@@ -12,8 +12,6 @@ using basic_field = field<double>;
 
 class PotentialFieldImplementation : public PotentialField, public basic_field
 {
-	std::shared_ptr<mesh_geom> _pGeometry; //Just keeps the pointer alive
-
 public:
 	PotentialFieldImplementation(Mesh* meshGeom);
 
@@ -27,7 +25,7 @@ public:
 
 	void setBoundaryType(const std::string& name, BOUNDARY_TYPE type);
 
-	std::vector<std::string> getBoundaryNames() const;
+	void applyBoundaryConditions();
 
 	void diffuse();
 

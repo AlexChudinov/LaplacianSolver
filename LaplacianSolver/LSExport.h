@@ -81,8 +81,8 @@ public:
 	//Sets boundary type
 	virtual void setBoundaryType(const std::string& name, BOUNDARY_TYPE type) = 0;
 
-	//Returns list of all boundary names
-	virtual std::vector<std::string> getBoundaryNames() const = 0;
+	//Applies boundary conditions to a field array
+	virtual void applyBoundaryConditions() = 0;
 
 	//Make one step of laplacian solver
 	virtual void diffuse() = 0;
