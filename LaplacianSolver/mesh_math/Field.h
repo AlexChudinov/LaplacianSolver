@@ -23,16 +23,17 @@ class field
 public:
 	using mesh_geom = mesh_geometry<double, uint32_t>;
 	using data_vector = std::vector<field_type>;
-	using node_types_list = std::vector<bool>; //true if it is inner point and false if it is boundary
-	using node_labels_list = std::set<uint32_t>;
+	using node_types_list = std::vector<bool>; //true if it is inner point and false if it is a boundary
+	using node_labels_list = std::map<uint32_t, field_type>;
 	using boundary_entry = std::pair<std::string, node_labels_list>;
 	using boundary_list = std::map<std::string, node_labels_list>;
-
-	using PtrMesh = std::shared_ptr<mesh_geom>;
+	
+	using BoundaryMesh = typename mesh_geom::BoundaryMesh;
+	using MeshSharedPtr = std::shared_ptr<mesh_geom>;
 private:
 	//Keep reference to a space mesh
-	PtrMesh m_pMeshGeometry;
-
+	MeshSharedPtr m_pMeshGeometry;
+	BoundaryMesh m_boundaryMesh;
 
 	data_vector _data; //Field data itself
 	node_types_list _node_types; //Types of a field nodes
@@ -41,11 +42,11 @@ public:
 	/**
 	 * Creates zero filled field
 	 */
-	field(const PtrMesh& meshGeometry)
+	field(const MeshSharedPtr& meshGeometry)
 		: 
 		m_pMeshGeometry(meshGeometry), 
 		_data(geometry_.size(), field_type(0.0)),
-		_node_types(geometry_.size(), INNER_POINT)
+		_node_types(geometry_.size(), true)
 	{}
 
 	const data_vector& data() const { return _data; }
@@ -56,8 +57,8 @@ public:
 	 */
 	void add_boundary(const std::string& name, const node_labels_list& nodes)
 	{
-		_boundaries[name] = nodes;
-		for (uint32_t l : nodes) _node_types[l] = BOUNDARY_FIXED_VALUE;
+		std::set<uint32_t> labels;
+		m_boundaryMesh.addBoundary(name, )
 	}
 
 	/**

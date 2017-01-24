@@ -87,7 +87,7 @@ public:
 private:
     graph mesh_connectivity_;
     node_positions node_positions_;
-	
+
 	//Numeric limit for floating point precision
 	Float m_fEpsilon;
 public:
