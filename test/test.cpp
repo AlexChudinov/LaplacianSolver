@@ -144,8 +144,8 @@ int main()
 		std::generate(line.begin(), line.end(), [&]()->V3D 
 		{ 
 			double x, y, z;
-			x = box.first.x + (box.second.x - box.first.x) / 199. * (n);
-			y = box.first.y + (box.second.y - box.first.y) / 199. * (n);
+			x = 0.0052;//box.first.x + (box.second.x - box.first.x) / 199. * (n);
+			y = 0.0023; //box.first.y + (box.second.y - box.first.y) / 199. * (n);
 			z = box.first.z + (box.second.z - box.first.z) / 199. * (n++);
 			return{ x,y,z };
 		});
@@ -155,17 +155,17 @@ int main()
 		readBoundaries(f, std::cout, "test_files/cube.rgn");
 
 		//Create field
-		//f->setBoundaryType("F21.16", PotentialField::ZERO_GRAD);
-		//f->setBoundaryType("F19.16", PotentialField::ZERO_GRAD);
-		//f->setBoundaryType("F18.16", PotentialField::ZERO_GRAD);
-		//f->setBoundaryType("F22.16", PotentialField::ZERO_GRAD);
+		f->setBoundaryType("F21.16", PotentialField::ZERO_GRAD);
+		f->setBoundaryType("F19.16", PotentialField::ZERO_GRAD);
+		f->setBoundaryType("F18.16", PotentialField::ZERO_GRAD);
+		f->setBoundaryType("F22.16", PotentialField::ZERO_GRAD);
 		f->setBoundaryVal("F20.16", 1.0);
-		//f->setBoundaryVal("F17.16", -1.0);
-		//f->setBoundaryType("F20.16", PotentialField::FIXED_VAL);
-		//f->setBoundaryType("F17.16", PotentialField::FIXED_VAL);
+		f->setBoundaryVal("F17.16", -1.0);
+		f->setBoundaryType("F20.16", PotentialField::FIXED_VAL);
+		f->setBoundaryType("F17.16", PotentialField::FIXED_VAL);
 		std::cout << "Field calculation: \n";
 		f->applyBoundaryConditions();
-		for (int i = 0; i < 100; ++i)
+		for (int i = 0; i < 1000; ++i)
 		{
 			std::vector<double> field = f->getPotentialVals();
 			f->diffuse();

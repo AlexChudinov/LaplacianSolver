@@ -273,9 +273,11 @@ public:
 			vector3f
 				v1 = node_positions_[l1] - node_positions_[start],
 				v2 = node_positions_[l2] - node_positions_[start];
-			if (::fabs(math::det(math::matrix_c<double, 3, 3>{v1, e0, e1})) < eps()
-				&& ::fabs(math::det(math::matrix_c<double, 3, 3>{v2, e0, e1})) >= eps()) return true;
-			if (::fabs(math::det(math::matrix_c<double, 3, 3>{v2, e0, e1})) < eps()) return false;
+			double 
+				norm1 = ::fabs(math::det(math::matrix_c<double, 3, 3>{v1, e0, e1})),
+				norm2 = ::fabs(math::det(math::matrix_c<double, 3, 3>{v2, e0, e1}));
+			if (norm1 < eps() && norm2 >= eps()) return true;
+			if (norm2 < eps()) return false;
 			return pos*v1 / math::abs(v1) < pos*v2 / math::abs(v2);
 		});
 	}
@@ -302,8 +304,11 @@ public:
 			{
 				std::tuple<Float, Float> coefs
 					= math::lineInterpolation(pos, node_positions_[l0], node_positions_[l1]);
-				return 
-					InterpCoefs{ InterpCoef(l0, std::get<0>(coefs)), InterpCoef(l1, std::get<1>(coefs)) };
+				return InterpCoefs
+				{ 
+					InterpCoef(l0, std::get<0>(coefs)), 
+					InterpCoef(l1, std::get<1>(coefs)) 
+				};
 			}
 			else
 			{

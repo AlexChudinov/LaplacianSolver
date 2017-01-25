@@ -45,6 +45,9 @@
     <ClInclude Include="PotentialFieldImplementation.h">
       <Filter>Заголовочные файлы\export</Filter>
     </ClInclude>
+    <ClInclude Include="mesh_math\fieldOperator.h">
+      <Filter>Заголовочные файлы\mesh_math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ls_main.cpp">

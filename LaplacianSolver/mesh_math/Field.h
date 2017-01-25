@@ -20,6 +20,7 @@ template<typename field_type>
 //Field type could be scalar or vector
 class field
 {
+	template <typename field_type> friend class FieldLinearOp;
 public:
 	using mesh_geom = mesh_geometry<double, uint32_t>;
 	using data_vector = std::vector<field_type>;

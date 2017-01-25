@@ -149,6 +149,7 @@
     <ClInclude Include="ls_main.h" />
     <ClInclude Include="MeshImplementation.h" />
     <ClInclude Include="mesh_math\Field.h" />
+    <ClInclude Include="mesh_math\fieldOperator.h" />
     <ClInclude Include="mesh_math\mesh_geometry.h" />
     <ClInclude Include="PotentialFieldImplementation.h" />
   </ItemGroup>

@@ -7,11 +7,11 @@
 #include "LSExport.h"
 #include "mesh_math\Field.h"
 
-using mesh_geom = mesh_geometry<double, UINT>;
-using basic_field = field<double>;
-
-class PotentialFieldImplementation : public PotentialField, public basic_field
+class PotentialFieldImplementation : public PotentialField, public field<double>
 {
+	using mesh_geom = mesh_geometry<double, UINT>;
+	using basic_field = field<double>;
+
 public:
 	PotentialFieldImplementation(Mesh* meshGeom);
 
