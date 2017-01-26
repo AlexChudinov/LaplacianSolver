@@ -91,4 +91,19 @@ public:
 	virtual double interpolate(double x, double y, double z, UINT* track_label = NULL) const = 0;
 };
 
+//Field linear transformation
+class LAPLACIAN_SOLVER_EXPORT ScalarFieldOperator
+{
+public:
+	enum OperatorType
+	{
+		Identity
+	};
+	//Field operator factory
+	static ScalarFieldOperator* create(const PotentialField* pF, OperatorType type = Identity);
+	static void free(ScalarFieldOperator* pFO);
+
+	//Applies operator to a field
+	virtual void applyToField(PotentialField* pF) const = 0;
+};
 #endif // !_LS_EXPORT_H_

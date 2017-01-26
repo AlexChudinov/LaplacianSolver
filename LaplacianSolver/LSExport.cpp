@@ -1,7 +1,8 @@
 #include "LSExport.h"
-#include "PotentialFieldImplementation.h"
-#include "GraphImplementation.h"
-#include "MeshImplementation.h"
+#include "functionality\PotentialFieldImplementation.h"
+#include "functionality\GraphImplementation.h"
+#include "functionality\MeshImplementation.h"
+#include "functionality\fieldOperatorImplementation.h"
 
 Graph * Graph::create()
 {
@@ -33,6 +34,16 @@ PotentialField * PotentialField::createZeros(Mesh * m)
 }
 
 void PotentialField::free(PotentialField * f)
+{
+	delete f;
+}
+
+ScalarFieldOperator * ScalarFieldOperator::create(const PotentialField* pF, ScalarFieldOperator::OperatorType type)
+{
+	return new FieldOperatorImplementation(*dynamic_cast<const field<double>*>(pF), type);
+}
+
+void ScalarFieldOperator::free(ScalarFieldOperator* f)
 {
 	delete f;
 }

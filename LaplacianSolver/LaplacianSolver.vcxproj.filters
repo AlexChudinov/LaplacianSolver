@@ -22,6 +22,12 @@
     <Filter Include="Файлы исходного кода\export">
       <UniqueIdentifier>{024ddde3-2f5c-48df-b269-b872972f5959}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Заголовочные файлы\functionality">
+      <UniqueIdentifier>{59edc1c9-9d6f-4d41-bed5-b2ebc1c84df7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\functionality">
+      <UniqueIdentifier>{9eb18dac-a637-4d9a-8e12-1ebc19b0d530}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ls_main.h">
@@ -36,17 +42,20 @@
     <ClInclude Include="LSExport.h">
       <Filter>Заголовочные файлы\export</Filter>
     </ClInclude>
-    <ClInclude Include="GraphImplementation.h">
-      <Filter>Заголовочные файлы\export</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshImplementation.h">
-      <Filter>Заголовочные файлы\export</Filter>
-    </ClInclude>
-    <ClInclude Include="PotentialFieldImplementation.h">
-      <Filter>Заголовочные файлы\export</Filter>
-    </ClInclude>
     <ClInclude Include="mesh_math\fieldOperator.h">
       <Filter>Заголовочные файлы\mesh_math</Filter>
+    </ClInclude>
+    <ClInclude Include="functionality\GraphImplementation.h">
+      <Filter>Заголовочные файлы\functionality</Filter>
+    </ClInclude>
+    <ClInclude Include="functionality\MeshImplementation.h">
+      <Filter>Заголовочные файлы\functionality</Filter>
+    </ClInclude>
+    <ClInclude Include="functionality\PotentialFieldImplementation.h">
+      <Filter>Заголовочные файлы\functionality</Filter>
+    </ClInclude>
+    <ClInclude Include="functionality\fieldOperatorImplementation.h">
+      <Filter>Заголовочные файлы\functionality</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -56,14 +65,17 @@
     <ClCompile Include="LSExport.cpp">
       <Filter>Файлы исходного кода\export</Filter>
     </ClCompile>
-    <ClCompile Include="GraphImplementation.cpp">
-      <Filter>Файлы исходного кода\export</Filter>
+    <ClCompile Include="functionality\GraphImplementation.cpp">
+      <Filter>Файлы исходного кода\functionality</Filter>
     </ClCompile>
-    <ClCompile Include="MeshImplementation.cpp">
-      <Filter>Файлы исходного кода\export</Filter>
+    <ClCompile Include="functionality\MeshImplementation.cpp">
+      <Filter>Файлы исходного кода\functionality</Filter>
     </ClCompile>
-    <ClCompile Include="PotentialFieldImplementation.cpp">
-      <Filter>Файлы исходного кода\export</Filter>
+    <ClCompile Include="functionality\PotentialFieldImplementation.cpp">
+      <Filter>Файлы исходного кода\functionality</Filter>
+    </ClCompile>
+    <ClCompile Include="functionality\fieldOperatorImplementation.cpp">
+      <Filter>Файлы исходного кода\functionality</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

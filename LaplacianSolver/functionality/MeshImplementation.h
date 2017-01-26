@@ -4,8 +4,8 @@
 
 #include <memory>
 
-#include "LSExport.h"
-#include "mesh_math\mesh_geometry.h"
+#include "..\LSExport.h"
+#include "..\mesh_math\mesh_geometry.h"
 
 using graph = data_structs::graph<UINT>;
 using vector3f = math::vector_c<double, 3>;

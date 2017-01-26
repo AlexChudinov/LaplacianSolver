@@ -9,32 +9,50 @@
 template<typename field_type>
 class FieldLinearOp
 {
+public:
 	using Field = field<field_type>;
-	using MatrixRow = typename Field::mesh_geom::InterpCoefs;
+	using mesh_geom = mesh_geometry<double, uint32_t>;
+	using MatrixElem = typename mesh_geom::InterpCoef;
+	using MatrixRow = typename mesh_geom::InterpCoefs;
 	using Matrix = std::vector<MatrixRow>;
 
+private:
 	Matrix m_matrix;
-
-	FieldLinearOp(const Field& field)
-		:
-		m_matrix(field.m_pMeshGeometry->size())
-	{}
 public:
-	enum OpType
-	{
-		Identity //Identity field transform matrix
-	};
 
-	static FieldLinearOp create(const Field& field, OpType type = Identity)
+	FieldLinearOp(const Field& field, size_t nThreads)
+		: m_matrix(field.m_pMeshGeometry->size())
+	{}
+
+	//Sets inner matrix to identity
+	FieldLinearOp& setToIdentity()
 	{
-		FieldLinearOp result(field);
-		switch (type)
+		uint32_t i = 0;
+		for (MatrixRow& row : m_matrix)
 		{
-		case Identity:
-			for(MatrixRow& row : result.m_matrix)
-		default:
-			break;
+			row.clear();
+			row[i++] = 1.0;
 		}
+		return *this;
+	}
+
+	//Calculates laplacian field operator
+
+	//Applies linear operator to a field
+	void applyToField(Field& field) const
+	{
+		typename Field::data_vector data = field.data();
+		size_t i = 0;
+		for (const auto& row : m_matrix)
+		{
+			field_type& dataElem = data[i++];
+			dataElem = 0.0;
+			for (const auto& interpCoef : row)
+			{
+				dataElem += field._data[interpCoef.first] * interpCoef.second;
+			}
+		}
+		field.data() = data;
 	}
 };
 

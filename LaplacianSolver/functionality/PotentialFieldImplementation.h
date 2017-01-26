@@ -4,8 +4,8 @@
 
 #include <memory>
 
-#include "LSExport.h"
-#include "mesh_math\Field.h"
+#include "..\LSExport.h"
+#include "..\mesh_math\Field.h"
 
 class PotentialFieldImplementation : public PotentialField, public field<double>
 {

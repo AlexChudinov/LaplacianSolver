@@ -144,17 +144,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="GraphImplementation.h" />
+    <ClInclude Include="functionality\fieldOperatorImplementation.h" />
+    <ClInclude Include="functionality\GraphImplementation.h" />
+    <ClInclude Include="functionality\MeshImplementation.h" />
+    <ClInclude Include="functionality\PotentialFieldImplementation.h" />
     <ClInclude Include="LSExport.h" />
     <ClInclude Include="ls_main.h" />
-    <ClInclude Include="MeshImplementation.h" />
     <ClInclude Include="mesh_math\Field.h" />
     <ClInclude Include="mesh_math\fieldOperator.h" />
     <ClInclude Include="mesh_math\mesh_geometry.h" />
-    <ClInclude Include="PotentialFieldImplementation.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GraphImplementation.cpp" />
+    <ClCompile Include="functionality\fieldOperatorImplementation.cpp" />
+    <ClCompile Include="functionality\GraphImplementation.cpp" />
+    <ClCompile Include="functionality\MeshImplementation.cpp" />
+    <ClCompile Include="functionality\PotentialFieldImplementation.cpp" />
     <ClCompile Include="LSExport.cpp" />
     <ClCompile Include="ls_main.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -170,8 +174,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="MeshImplementation.cpp" />
-    <ClCompile Include="PotentialFieldImplementation.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

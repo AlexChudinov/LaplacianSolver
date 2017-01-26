@@ -3,7 +3,7 @@
 #define _GRAPH_IMPLEMENTATION_H_ 1
 
 #include <data_structs\graph.h>
-#include "LSExport.h"
+#include "..\LSExport.h"
 
 class GraphImplementation : public Graph, public data_structs::graph<uint32_t>
 {

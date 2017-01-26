@@ -165,7 +165,7 @@ int main()
 		f->setBoundaryType("F17.16", PotentialField::FIXED_VAL);
 		std::cout << "Field calculation: \n";
 		f->applyBoundaryConditions();
-		for (int i = 0; i < 1000; ++i)
+		for (int i = 0; i < 100; ++i)
 		{
 			std::vector<double> field = f->getPotentialVals();
 			f->diffuse();
@@ -187,7 +187,14 @@ int main()
 
 		std::vector<double> fld = f->getPotentialVals();
 
+		std::cout << "\nTest identity operator: \n";
+		ScalarFieldOperator* op = ScalarFieldOperator::create(f);
+		op->applyToField(f);
+		std::cout << "Field difference after operator application = " << field_diff(fld, f->getPotentialVals());
+		std::cout << std::endl;
+
 		PotentialField::free(f);
+		ScalarFieldOperator::free(op);
 		return 0;
 	}
 	catch (const std::exception& e)
