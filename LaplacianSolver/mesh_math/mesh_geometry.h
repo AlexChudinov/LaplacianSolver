@@ -93,6 +93,31 @@ public:
  		iterator begin() { return m_mapReversedBoundariesList.begin(); }
 		const_iterator end() const { return m_mapReversedBoundariesList.end(); }
 		iterator end() { return m_mapReversedBoundariesList.end(); }
+
+		//Checks if the name is in the boundaries list
+		bool isBoundary(const std::string& sName) const 
+		{ 
+			return m_mapBoundariesList.find(sName) != m_mapBoundariesList.end();
+		}
+		//Checks if the label belongs to the boundary
+		bool isBoundary(label l) const
+		{
+			return m_mapReversedBoundariesList.find(l) != m_mapReversedBoundariesList.end();
+		}
+		//Checks if it is a first-type (Dirichlet) boundary condition
+		bool isFirstType(const std::string& sName) const
+		{
+			return m_mapBoundariesList.at(sName).first == FIXED_VAL;
+		}
+		bool isFirstType(label l) const
+		{
+			return std::accumulate(m_mapReversedBoundariesList.at(l).begin(),
+				m_mapReversedBoundariesList.at(l).end(), false, 
+				[=](bool val, const std::string& sName)->bool
+			{
+				return val |= isFirstType(sName);
+			});
+		}
 	};
 
 private:
@@ -177,6 +202,26 @@ public:
 	 * Returns point3D by a label
 	 */
 	inline const vector3f& spacePositionOf(label id) const { return node_positions_[id]; }
+
+	/**
+	 * Returns shortest edge length incident to the given label id
+	 */
+	inline double shortestEdgeLength(label id) const
+	{
+		return *std::min_element(
+			mesh_connectivity_.getNeighbour(id).begin(),
+			mesh_connectivity_.getNeighbour(id).end(),
+			[&](label l1, label l2)->bool
+		{
+			return math::sqr(spacePositionOf(l1) - spacePositionOf(id))
+				< math::sqr(spacePositionOf(l2) - spacePositionOf(id));
+		});
+	}
+
+	/**
+	 * Gets nodes incident to a node with the label id
+	 */
+	inline const label_list& neighbour(label id) const { return mesh_connectivity_.getNeighbour(id); }
 
 	/**
 	 * Visit neigbour points

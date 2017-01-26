@@ -28,12 +28,13 @@ public:
 	using node_labels_list = std::set<uint32_t>;
 	
 	using BoundaryMesh = typename mesh_geom::BoundaryMesh;
+	using BoundaryMeshSharedPtr = std::shared_ptr<BoundaryMesh>;
 	using MeshSharedPtr = std::shared_ptr<mesh_geom>;
 	using BoundaryValues = std::map<std::string, std::map<uint32_t, field_type>>;
 private:
 	//Keep reference to a space mesh
 	MeshSharedPtr m_pMeshGeometry;
-	BoundaryMesh m_boundaryMesh;
+	BoundaryMeshSharedPtr m_pBoundaryMesh;
 
 	data_vector _data; //Field data itself
 	node_types_list _node_types; //Types of a field nodes
@@ -45,7 +46,7 @@ public:
 	field(const MeshSharedPtr& meshGeometry)
 		: 
 		m_pMeshGeometry(meshGeometry),
-		m_boundaryMesh(meshGeometry->createBoundary()),
+		m_pBoundaryMesh(new BoundaryMesh(meshGeometry->createBoundary())),
 		_data(m_pMeshGeometry->size(), field_type(0.0)),
 		_node_types(m_pMeshGeometry->size(), true)
 	{}
@@ -53,12 +54,15 @@ public:
 	const data_vector& data() const { return _data; }
 	data_vector& data() { return _data; }
 
+	//Returns field data size
+	size_t size() const { return _data.size(); }
+
 	/**
 	 * Adds new boundary to a field
 	 */
 	void add_boundary(const std::string& sName, const node_labels_list& labels)
 	{
-		m_boundaryMesh.addBoundary(sName, labels);
+		m_pBoundaryMesh->addBoundary(sName, labels);
 		auto& boundaryPatch = m_boundaryFieldVals[sName];
 		for (auto l : labels)
 		{
@@ -90,21 +94,21 @@ public:
 	 */
 	void set_boundary_type(const std::string& sName, BoundaryMesh::BoundaryType type)
 	{
-		m_boundaryMesh.boundaryType(sName, type);
+		m_pBoundaryMesh->boundaryType(sName, type);
 	}
 
 	//Applies boundary conditions to a mesh
 	//Puts averaged fixed values at FIXED_VAL boundary conditions and initializes ZERO_GRAD with zeros
 	void applyBoundaryConditions()
 	{
-		for (const auto& boundaryLabel : m_boundaryMesh)
+		for (const auto& boundaryLabel : *m_pBoundaryMesh)
 		{
 			int primaryCondition = 0;
 			field_type primaryCondAcc = 0.0;
 			const typename BoundaryMesh::NamesList& listNames = boundaryLabel.second;
 			for (const auto& name : listNames)
 			{
-				switch (m_boundaryMesh.boundaryType(name))
+				switch (m_pBoundaryMesh->boundaryType(name))
 				{
 				case BoundaryMesh::ZERO_GRAD:
 					break;
@@ -144,9 +148,9 @@ public:
 		}
 		else
 		{
-			for (const auto& name : m_boundaryMesh.boundaryNames(l))
+			for (const auto& name : m_pBoundaryMesh->boundaryNames(l))
 			{
-				if (m_boundaryMesh.boundaryType(name) == BoundaryMesh::FIXED_VAL) return _data[l];
+				if (m_pBoundaryMesh->boundaryType(name) == BoundaryMesh::FIXED_VAL) return _data[l];
 			}
 			m_pMeshGeometry->visit_neigbour(l, [&](uint32_t l1)
 			{

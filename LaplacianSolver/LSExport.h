@@ -97,7 +97,8 @@ class LAPLACIAN_SOLVER_EXPORT ScalarFieldOperator
 public:
 	enum OperatorType
 	{
-		Identity
+		Identity,
+		LaplacianSolver
 	};
 	//Field operator factory
 	static ScalarFieldOperator* create(const PotentialField* pF, OperatorType type = Identity);

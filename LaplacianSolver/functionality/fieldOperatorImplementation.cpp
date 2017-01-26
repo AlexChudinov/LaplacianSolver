@@ -7,10 +7,9 @@ FieldOperatorImplementation::FieldOperatorImplementation(const field<double>& fi
 {
 	switch (type)
 	{
-	case ScalarFieldOperator::Identity:
-		basic_operator::setToIdentity();
-		break;
-	default: throw std::runtime_error	("FieldOperatorImplementation::FieldOperatorImplementation:"
+	case ScalarFieldOperator::Identity: basic_operator::setToIdentity(); break;
+	case ScalarFieldOperator::LaplacianSolver: basic_operator::laplacianSolver(); break;
+	default: throw std::runtime_error("FieldOperatorImplementation::FieldOperatorImplementation:"
 										 " Unsupported operator type.");
 	}
 
