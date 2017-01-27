@@ -37,7 +37,7 @@ private:
 	BoundaryMeshSharedPtr m_pBoundaryMesh;
 
 	data_vector _data; //Field data itself
-	node_types_list _node_types; //Types of a field nodes
+	node_types_list _node_types; //Types of a field nodes, true if it is inner point and false if it is a boundary
 	BoundaryValues m_boundaryFieldVals;
 public:
 	/**

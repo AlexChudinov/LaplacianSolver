@@ -65,7 +65,14 @@ public:
 				}
 				else
 				{//Zero gradient condition
-					mesh_geom::label_list& neighbor = m_pMeshGeometry->neighbour(i);
+					std::vector<uint32_t> neighbour(m_pMeshGeometry->neighbour(i).begin(), 
+						m_pMeshGeometry->neighbour(i).end());
+					std::vector<uint32_t>::iterator end
+						= std::remove_if(neighbour.begin(), neighbour.end(),
+							[=](uint32_t l)->bool { return m_nodeTypes[l]; });
+					std::vector<vector3f> neighbourNodes(std::distance(neighbour.begin(), end), vector3f(0.0));
+					std::transform(neighbour.begin(), end, neighbourNodes.begin(), 
+						[=](uint32_t l)->vector3f { return m_pMeshGeometry->spacePositionOf(l); })
 				}
 			}
 		}
