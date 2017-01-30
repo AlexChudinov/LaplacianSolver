@@ -28,6 +28,18 @@ private:
 	BoundaryMeshSharedPtr m_pBoundaryMesh;
 
 	NodeTypes m_nodeTypes;
+
+	//Interpolation coefficients arithmetics
+	static MatrixRow operator+(const MatrixRow& r1, const MatrixRow& r2)
+	{
+		MatrixRow result = r1.size() <= r2.size() ? r1 : r2;
+		const MatrixRow& t = result.size() == r1.size() ? r2 : r1;
+		for (const InterpCoef& coef : t)
+		{
+			MatrixRow::iterator it = result.find(coef.first);
+			if(it != result.end())
+		}
+	}
 public:
 	FieldLinearOp(const Field& field)
 		: 
@@ -91,7 +103,7 @@ public:
 					//Calculate plane normal
 					vector3f n = math::crossProduct(e1, e2);
 					//Find first inner point
-					std::set<uint32_t>::const_iterator it = std::find(m_pMeshGeometry->neighbour(i).begin(),
+					std::set<uint32_t>::const_iterator it = std::find_if(m_pMeshGeometry->neighbour(i).begin(),
 						m_pMeshGeometry->neighbour(i).end(), [=](uint32_t l)->bool {return m_nodeTypes[l]; });
 					n = m_pMeshGeometry->spacePositionOf(*it) * n > 0.0 ? n : -n;
 					//Calculate interpolation point
