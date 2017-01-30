@@ -20,6 +20,7 @@ public:
 	using InterpCoef = mesh_geometry<double, uint32_t>::InterpCoef;
 	using InterpCoefs = mesh_geometry<double, uint32_t>::InterpCoefs;
 	using NodeTypes = std::vector<bool>;
+	using vector3f = mesh_geom::vector3f;
 
 private:
 	Matrix m_matrix;
@@ -71,8 +72,31 @@ public:
 						= std::remove_if(neighbour.begin(), neighbour.end(),
 							[=](uint32_t l)->bool { return m_nodeTypes[l]; });
 					std::vector<vector3f> neighbourNodes(std::distance(neighbour.begin(), end), vector3f(0.0));
-					std::transform(neighbour.begin(), end, neighbourNodes.begin(), 
-						[=](uint32_t l)->vector3f { return m_pMeshGeometry->spacePositionOf(l); })
+					std::transform(neighbour.begin(), end, neighbourNodes.begin(),
+						[=](uint32_t l)->vector3f { return m_pMeshGeometry->spacePositionOf(l); });
+					//Calculate first eigen vector
+					vector3f e1 = math::eigenVectorSimple(math::cov(neighbourNodes));
+					//Calculate average plane point
+					vector3f z = std::accumulate(neighbourNodes.begin(), neighbourNodes.end(), vector3f(0.0));
+					z /= double(neighbourNodes.size());
+					//Remove first component
+					std::for_each(neighbourNodes.begin(), neighbourNodes.end(),
+						[=](vector3f& vec) 
+					{
+						vec -= z;
+						vec -= (vec*e1)*e1;
+					});
+					//Calculate second eigen vector
+					vector3f e2 = math::eigenVectorSimple(math::cov(neighbourNodes));
+					//Calculate plane normal
+					vector3f n = math::crossProduct(e1, e2);
+					//Find first inner point
+					std::set<uint32_t>::const_iterator it = std::find(m_pMeshGeometry->neighbour(i).begin(),
+						m_pMeshGeometry->neighbour(i).end(), [=](uint32_t l)->bool {return m_nodeTypes[l]; });
+					n = m_pMeshGeometry->spacePositionOf(*it) * n > 0.0 ? n : -n;
+					//Calculate interpolation point
+					vector3f r = z + n*h;
+					m_matrix[i] = m_pMeshGeometry->interpCoefs(r[0], r[1], r[2], i);
 				}
 			}
 		}
