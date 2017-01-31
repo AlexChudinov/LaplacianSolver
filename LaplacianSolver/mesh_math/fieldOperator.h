@@ -30,16 +30,24 @@ private:
 	NodeTypes m_nodeTypes;
 
 	//Interpolation coefficients arithmetics
-	static MatrixRow operator+(const MatrixRow& r1, const MatrixRow& r2)
+	static MatrixRow& add(MatrixRow& r1, const MatrixRow& r2)
 	{
-		MatrixRow result = r1.size() <= r2.size() ? r1 : r2;
-		const MatrixRow& t = result.size() == r1.size() ? r2 : r1;
-		for (const InterpCoef& coef : t)
+
+		for (const InterpCoef& c : r2)
 		{
-			MatrixRow::iterator it = result.find(coef.first);
-			if(it != result.end())
+			MatrixRow::iterator it = r1.lower_bound(c.first);
+			if (it->first != c.first)
+			{
+				r1.emplace_hint(it, c);
+			}
+			else
+			{
+				it->second += c.second;
+			}
 		}
+		return r1;
 	}
+
 public:
 	FieldLinearOp(const Field& field)
 		: 

@@ -30,31 +30,47 @@ public:
 	class BoundaryMesh
 	{
 		const mesh_geometry& m_mesh;
+
+		using StrRef = std::reference_wrapper<const std::string>;
+
+		//Declare reference wrappers comparison
+		class StrRefLess : public std::binary_function<const StrRef&, const StrRef&, bool>
+		{
+		public:
+			bool operator()(const StrRef& s1, const StrRef& s2) const
+			{
+				return s1.get() < s2.get();
+			}
+		};
+
 	public:
 		enum BoundaryType { ZERO_GRAD, FIXED_VAL };
 
 		using BoundaryDescription = std::pair<BoundaryType, label_list>;
 		using BoundariesMap = std::map<std::string, BoundaryDescription>;
-		using NamesList = std::set<std::string>;
+		using NamesList = std::set<StrRef, StrRefLess> ;
 		using ReversedBoundariesMap = std::map<label, NamesList>;
+
 		using iterator = typename ReversedBoundariesMap::iterator;
 		using const_iterator = typename ReversedBoundariesMap::const_iterator;
 
 	private:
 		BoundariesMap m_mapBoundariesList;
 		ReversedBoundariesMap m_mapReversedBoundariesList;
+
 	public:
 		//Creates empty boundary mesh
 		BoundaryMesh(const mesh_geometry& mesh):m_mesh(mesh){}
 
-		//Adds new boundary patch
+		//Adds new boundary patch, where x, y and z are the normal components
 		void addBoundary(const std::string& strName, const label_list& labels, BoundaryType type = FIXED_VAL)
 		{
 			if (*labels.rbegin() >= m_mesh.size())
 				throw std::runtime_error("BoundaryMesh::addBoundary: Too big label for used mesh.");
 			if (m_mapBoundariesList.find(strName) != m_mapBoundariesList.end()) removeBoundary(strName);
-			for (label l : labels) m_mapReversedBoundariesList[l].insert(strName);
 			m_mapBoundariesList[strName] = std::make_pair(type, labels);
+			typename BoundariesMap::const_iterator it = m_mapBoundariesList.lower_bound(strName);
+			for (label l : labels) m_mapReversedBoundariesList[l].insert(std::cref(it->first));
 		}
 
 		//Removes existing boundary patch
