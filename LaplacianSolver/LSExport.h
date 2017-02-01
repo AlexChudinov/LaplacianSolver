@@ -76,25 +76,22 @@ public:
 	virtual void setBoundaryVal(const std::string& name, const std::vector<double>& vals) = 0;
 
 	//Adds new boundary node labels should be listed
-	virtual void addBoundary(
-		const std::string& sName, 
-		const std::vector<UINT>& vLabels,
-		const std::vector<V3D>& vNormals) = 0;
+	virtual void addBoundary(const std::string& sName, const std::vector<UINT>& vLabels, const std::vector<V3D>& vNormals) = 0;
 
 	//Sets boundary type
 	virtual void setBoundaryType(const std::string& name, BOUNDARY_TYPE type) = 0;
 
-	//Applies boundary conditions to a field array
+	//Changes field array values accordingly to boundary conditions
 	virtual void applyBoundaryConditions() = 0;
 
 	//Make one step of laplacian solver
 	virtual void diffuse() = 0;
 
-	//Interpolate field value at current point
+	//Interpolate field value at a current point
 	virtual double interpolate(double x, double y, double z, UINT* track_label = NULL) const = 0;
 };
 
-//Field linear transformation
+//Field linear transformations
 class LAPLACIAN_SOLVER_EXPORT ScalarFieldOperator
 {
 public:

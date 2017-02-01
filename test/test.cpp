@@ -132,28 +132,7 @@ int main()
 		//Create mesh
 
 		Mesh* m = readConnectivity(std::cout, "test_files/cube.geom");
-		PotentialField* f = PotentialField::createZeros(m);
-
-		std::pair<V3D, V3D> box = m->getBox();
-
-		std::cout << "Box containing all geometry: "
-			<< "xmin = " << box.first.x << std::endl
-			<< "xmax = " << box.second.x << std::endl
-			<< "ymin = " << box.first.y << std::endl
-			<< "ymax = " << box.second.y << std::endl
-			<< "zmin = " << box.first.z << std::endl
-			<< "zmax = " << box.second.z << std::endl;
-
-		std::vector<V3D> line(200);
-		int n = 0;
-		std::generate(line.begin(), line.end(), [&]()->V3D 
-		{ 
-			double x, y, z;
-			x = box.first.x + (box.second.x - box.first.x) / 199. * (n);
-			y = box.first.y + (box.second.y - box.first.y) / 199. * (n);
-			z = box.first.z + (box.second.z - box.first.z) / 199. * (n++);
-			return{ x,y,z };
-		});
+		PotentialField* f = PotentialField::createZeros(m);		
 
 		Mesh::free(m);
 
@@ -178,20 +157,6 @@ int main()
 			std::vector<double> field2 = f->getPotentialVals();
 			std::cout << "step: " << i << "diff: " << field_diff(field, field2) << std::endl;
 		}
-
-		std::vector<double> field_vals(line.size());
-		std::transform(line.begin(), line.end(), field_vals.begin(),
-			[&](V3D pos)->double
-		{
-			return f->interpolate(pos.x, pos.y, pos.z);
-		});
-
-		std::ofstream out;
-		out.open("test.dat");
-		std::copy(field_vals.begin(), field_vals.end(), std::ostream_iterator<double>(out, "\n"));
-		out.close();
-
-		std::vector<double> fld = f->getPotentialVals();
 
 		PotentialField::free(f);
 		ScalarFieldOperator::free(op);

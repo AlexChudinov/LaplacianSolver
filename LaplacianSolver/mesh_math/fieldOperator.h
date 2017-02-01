@@ -29,7 +29,7 @@ private:
 
 	NodeTypes m_nodeTypes;
 
-	//Interpolation coefficients arithmetics
+	//Adds two matrix rows
 	static MatrixRow& add(MatrixRow& r1, const MatrixRow& r2)
 	{
 
@@ -48,7 +48,7 @@ private:
 		return r1;
 	}
 
-	//Multiplication of coefficients by a constant number
+	//Multiplicates a matrix row by a number
 	static MatrixRow& mul(double h, MatrixRow& r)
 	{
 		for (std::pair<const uint32_t, double>& e : r) e.second *= h;
