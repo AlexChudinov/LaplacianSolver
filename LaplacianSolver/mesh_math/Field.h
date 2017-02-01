@@ -26,7 +26,8 @@ public:
 	using data_vector = std::vector<field_type>;
 	using node_types_list = std::vector<bool>; //true if it is inner point and false if it is a boundary
 	using node_labels_list = std::set<uint32_t>;
-	
+	using vector3f = math::vector_c<double, 3>;
+
 	using BoundaryMesh = typename mesh_geom::BoundaryMesh;
 	using BoundaryMeshSharedPtr = std::shared_ptr<BoundaryMesh>;
 	using MeshSharedPtr = std::shared_ptr<mesh_geom>;
@@ -60,11 +61,15 @@ public:
 	/**
 	 * Adds new boundary to a field
 	 */
-	void add_boundary(const std::string& sName, const node_labels_list& labels)
+	void add_boundary(
+		const std::string& sName, 
+		const std::vector<uint32_t>& vLabels,
+		const std::vector<vector3f>& vNormals
+	)
 	{
-		m_pBoundaryMesh->addBoundary(sName, labels);
-		auto& boundaryPatch = m_boundaryFieldVals[sName];
-		for (auto l : labels)
+		m_pBoundaryMesh->addBoundary(sName, vLabels, vNormals);
+		std::map<uint32_t, field_type>& boundaryPatch = m_boundaryFieldVals[sName];
+		for (uint32_t l : vLabels)
 		{
 			boundaryPatch[l] = field_type(0.0);
 			_node_types[l] = false;
@@ -105,7 +110,7 @@ public:
 		{
 			int primaryCondition = 0;
 			field_type primaryCondAcc = 0.0;
-			const typename BoundaryMesh::NamesList& listNames = boundaryLabel.second;
+			const typename BoundaryMesh::NamesList& listNames = boundaryLabel.second.second;
 			for (const auto& name : listNames)
 			{
 				switch (m_pBoundaryMesh->boundaryType(name))

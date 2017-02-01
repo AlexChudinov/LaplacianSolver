@@ -21,9 +21,15 @@ void PotentialFieldImplementation::setBoundaryVal(const std::string & name, cons
 	basic_field::set_boundary_vals(name, vals);
 }
 
-void PotentialFieldImplementation::addBoundary(const std::string & name, const std::set<UINT>& nodeLabels)
+void PotentialFieldImplementation::addBoundary(
+	const std::string& sName,
+	const std::vector<UINT>& vLabels,
+	const std::vector<V3D>& vNormals)
 {
-	basic_field::add_boundary(name, nodeLabels);
+	std::vector<vector3f> vNormalsInner(vNormals.size());
+	std::transform(vNormals.begin(), vNormals.end(), vNormalsInner.begin(),
+		[](V3D v)->vector3f { return vector3f{ v.x, v.y, v.z }; });
+	basic_field::add_boundary(sName, vLabels, vNormalsInner);
 }
 
 void PotentialFieldImplementation::setBoundaryType(const std::string & name, BOUNDARY_TYPE type)

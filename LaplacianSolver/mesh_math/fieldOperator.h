@@ -35,10 +35,10 @@ private:
 
 		for (const InterpCoef& c : r2)
 		{
-			MatrixRow::iterator it = r1.lower_bound(c.first);
-			if (it->first != c.first)
+			MatrixRow::iterator it = r1.find(c.first);
+			if (it == r1.end())
 			{
-				r1.emplace_hint(it, c);
+				r1[c.first] = c.second;
 			}
 			else
 			{
@@ -46,6 +46,13 @@ private:
 			}
 		}
 		return r1;
+	}
+
+	//Multiplication of coefficients by a constant number
+	static MatrixRow& mul(double h, MatrixRow& r)
+	{
+		for (std::pair<const uint32_t, double>& e : r) e.second *= h;
+		return r;
 	}
 
 public:
@@ -85,39 +92,21 @@ public:
 					m_matrix[i] = InterpCoefs{ InterpCoef{i, 1.0} };
 				}
 				else
-				{//Zero gradient condition
-					std::vector<uint32_t> neighbour(m_pMeshGeometry->neighbour(i).begin(), 
-						m_pMeshGeometry->neighbour(i).end());
-					std::vector<uint32_t>::iterator end
-						= std::remove_if(neighbour.begin(), neighbour.end(),
-							[=](uint32_t l)->bool { return m_nodeTypes[l]; });
-					std::vector<vector3f> neighbourNodes(std::distance(neighbour.begin(), end), vector3f(0.0));
-					std::transform(neighbour.begin(), end, neighbourNodes.begin(),
-						[=](uint32_t l)->vector3f { return m_pMeshGeometry->spacePositionOf(l); });
-					//Calculate first eigen vector
-					vector3f e1 = math::eigenVectorSimple(math::cov(neighbourNodes));
-					//Calculate average plane point
-					vector3f z = std::accumulate(neighbourNodes.begin(), neighbourNodes.end(), vector3f(0.0));
-					z /= double(neighbourNodes.size());
-					//Remove first component
-					std::for_each(neighbourNodes.begin(), neighbourNodes.end(),
-						[=](vector3f& vec) 
-					{
-						vec -= z;
-						vec -= (vec*e1)*e1;
-					});
-					//Calculate second eigen vector
-					vector3f e2 = math::eigenVectorSimple(math::cov(neighbourNodes));
-					//Calculate plane normal
-					vector3f n = math::crossProduct(e1, e2);
-					//Find first inner point
-					std::set<uint32_t>::const_iterator it = std::find_if(m_pMeshGeometry->neighbour(i).begin(),
-						m_pMeshGeometry->neighbour(i).end(), [=](uint32_t l)->bool {return m_nodeTypes[l]; });
-					n = m_pMeshGeometry->spacePositionOf(*it) * n > 0.0 ? n : -n;
-					//Calculate interpolation point
-					vector3f r = z + n*h;
+				{//Zero gradient condition					
+					vector3f r = m_pMeshGeometry->spacePositionOf(i) + h*m_pBoundaryMesh->normal(i);
 					m_matrix[i] = m_pMeshGeometry->interpCoefs(r[0], r[1], r[2], i);
 				}
+			}
+			else
+			{
+				vector3f r = m_pMeshGeometry->spacePositionOf(i);
+				m_matrix[i] = m_pMeshGeometry->interpCoefs(r[0] + h, r[1], r[2], i);
+				m_matrix[i] = add(m_matrix[i], m_pMeshGeometry->interpCoefs(r[0] - h, r[1], r[2], i));
+				m_matrix[i] = add(m_matrix[i], m_pMeshGeometry->interpCoefs(r[0], r[1] + h, r[2], i));
+				m_matrix[i] = add(m_matrix[i], m_pMeshGeometry->interpCoefs(r[0], r[1] - h, r[2], i));
+				m_matrix[i] = add(m_matrix[i], m_pMeshGeometry->interpCoefs(r[0], r[1], r[2] + h, i));
+				m_matrix[i] = add(m_matrix[i], m_pMeshGeometry->interpCoefs(r[0], r[1], r[2] - h, i));
+				m_matrix[i] = mul(1. / 6., m_matrix[i]);
 			}
 		}
 		return *this;

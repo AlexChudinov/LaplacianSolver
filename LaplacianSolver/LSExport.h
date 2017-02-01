@@ -76,7 +76,10 @@ public:
 	virtual void setBoundaryVal(const std::string& name, const std::vector<double>& vals) = 0;
 
 	//Adds new boundary node labels should be listed
-	virtual void addBoundary(const std::string& name, const std::set<UINT>& nodeLabels) = 0;
+	virtual void addBoundary(
+		const std::string& sName, 
+		const std::vector<UINT>& vLabels,
+		const std::vector<V3D>& vNormals) = 0;
 
 	//Sets boundary type
 	virtual void setBoundaryType(const std::string& name, BOUNDARY_TYPE type) = 0;

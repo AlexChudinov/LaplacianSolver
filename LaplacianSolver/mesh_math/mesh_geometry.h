@@ -33,7 +33,7 @@ public:
 
 		using StrRef = std::reference_wrapper<const std::string>;
 
-		//Declare reference wrappers comparison
+		//Declare reference wrappers less operator
 		class StrRefLess : public std::binary_function<const StrRef&, const StrRef&, bool>
 		{
 		public:
@@ -49,7 +49,8 @@ public:
 		using BoundaryDescription = std::pair<BoundaryType, label_list>;
 		using BoundariesMap = std::map<std::string, BoundaryDescription>;
 		using NamesList = std::set<StrRef, StrRefLess> ;
-		using ReversedBoundariesMap = std::map<label, NamesList>;
+		using ReversedBoundariesMap = std::map<label, std::pair<vector3f, NamesList>>;
+		using BoundaryNormals = std::map<label, vector3f>;
 
 		using iterator = typename ReversedBoundariesMap::iterator;
 		using const_iterator = typename ReversedBoundariesMap::const_iterator;
@@ -62,21 +63,36 @@ public:
 		//Creates empty boundary mesh
 		BoundaryMesh(const mesh_geometry& mesh):m_mesh(mesh){}
 
-		//Adds new boundary patch, where x, y and z are the normal components
-		void addBoundary(const std::string& strName, const label_list& labels, BoundaryType type = FIXED_VAL)
+		//Adds new boundary patch
+		void addBoundary(
+			const std::string& strName, 
+			const std::vector<label>& vLabels,
+			const std::vector<vector3f>& vNormals,
+			BoundaryType type = FIXED_VAL)
 		{
-			if (*labels.rbegin() >= m_mesh.size())
+			if (vLabels.size() != vNormals.size())
+				throw std::runtime_error("BoundaryMesh::addBoundary: Sizes of normals and labels vectors are different.");
+			if (*std::max_element(vLabels.begin(), vLabels.end()) >= m_mesh.size())
 				throw std::runtime_error("BoundaryMesh::addBoundary: Too big label for used mesh.");
-			if (m_mapBoundariesList.find(strName) != m_mapBoundariesList.end()) removeBoundary(strName);
-			m_mapBoundariesList[strName] = std::make_pair(type, labels);
+			if (isBoundary(strName)) removeBoundary(strName);
+			m_mapBoundariesList[strName] = std::make_pair(type, label_list(vLabels.begin(), vLabels.end()));
 			typename BoundariesMap::const_iterator it = m_mapBoundariesList.lower_bound(strName);
-			for (label l : labels) m_mapReversedBoundariesList[l].insert(std::cref(it->first));
+			for (size_t i = 0; i < vLabels.size(); ++i)
+			{
+				std::pair<vector3f, NamesList>& entry = m_mapReversedBoundariesList[vLabels[i]];
+				entry.first = vNormals[i];
+				entry.second.insert(std::cref(it->first));
+			}
 		}
 
 		//Removes existing boundary patch
 		void removeBoundary(const std::string& strName)
 		{
-			for (label l : m_mapBoundariesList.at(strName).second) m_mapReversedBoundariesList[l].erase(strName);
+			for (label l : m_mapBoundariesList.at(strName).second)
+			{
+				m_mapReversedBoundariesList[l].second.erase(strName);
+				if (m_mapReversedBoundariesList[l].second.empty()) m_mapReversedBoundariesList.erase(l);
+			}
 			m_mapBoundariesList.erase(strName);
 		}
 
@@ -95,13 +111,13 @@ public:
 		//Returns a set of boundaries connected to a given label
 		const NamesList& boundaryNames(label l) const
 		{
-			return m_mapReversedBoundariesList.at(l);
+			return m_mapReversedBoundariesList.at(l).second;
 		}
 
 		//Returns numbers of nodes which are belong to a given boundary
 		const label_list& boundaryLabels(const std::string& strName) const
 		{
-			return m_mapBoundariesList.at(strName);
+			return m_mapBoundariesList.at(strName).second;
 		}
 
 		//Get iterators for boundary
@@ -127,12 +143,18 @@ public:
 		}
 		bool isFirstType(label l) const
 		{
-			return std::accumulate(m_mapReversedBoundariesList.at(l).begin(),
-				m_mapReversedBoundariesList.at(l).end(), false, 
+			return std::accumulate(m_mapReversedBoundariesList.at(l).second.begin(),
+				m_mapReversedBoundariesList.at(l).second.end(), false, 
 				[=](bool val, const std::string& sName)->bool
 			{
 				return val |= isFirstType(sName);
 			});
+		}
+
+		//Gets the normal for given node label
+		vector3f normal(label l) const
+		{
+			return m_mapReversedBoundariesList.at(l).first;
 		}
 	};
 
@@ -224,14 +246,15 @@ public:
 	 */
 	inline double shortestEdgeLength(label id) const
 	{
-		return *std::min_element(
+		return math::abs(spacePositionOf(
+			*std::min_element(
 			mesh_connectivity_.getNeighbour(id).begin(),
 			mesh_connectivity_.getNeighbour(id).end(),
 			[&](label l1, label l2)->bool
 		{
 			return math::sqr(spacePositionOf(l1) - spacePositionOf(id))
 				< math::sqr(spacePositionOf(l2) - spacePositionOf(id));
-		});
+		})) - spacePositionOf(id));
 	}
 
 	/**

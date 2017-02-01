@@ -62,7 +62,7 @@ Mesh* readConnectivity(std::ostream& readLog, const char* filename)
 
 void readBoundaries(PotentialField* f, std::ostream& readLog, const char* filename)
 {
-	std::set<UINT> labels; //Here we keep the boundary labels, note: start index is 0
+	std::vector<UINT> labels; //Here we keep the boundary labels, note: start index is 0
 
 	size_t boundaryNum;
 	std::string line;
@@ -88,12 +88,17 @@ void readBoundaries(PotentialField* f, std::ostream& readLog, const char* filena
 			for (size_t k = 0; k < 4; ++k)
 			{
 				in >> label;
-				labels.insert(label - 1);
+				labels.push_back(label - 1);
 			}
 		}
 
 		//New boundary!!! Labels start at 0 idx
-		f->addBoundary(line, labels);
+		if (line == "F17.16") f->addBoundary(line, labels, std::vector<V3D>(labels.size(), {-1, 0, 0}));
+		if (line == "F20.16") f->addBoundary(line, labels, std::vector<V3D>(labels.size(), { 1, 0, 0 }));
+		if (line == "F22.16") f->addBoundary(line, labels, std::vector<V3D>(labels.size(), { 0, 0, -1 }));
+		if (line == "F18.16") f->addBoundary(line, labels, std::vector<V3D>(labels.size(), { 0, 0, 1 }));
+		if (line == "F19.16") f->addBoundary(line, labels, std::vector<V3D>(labels.size(), { 0, -1, 0 }));
+		if (line == "F21.16") f->addBoundary(line, labels, std::vector<V3D>(labels.size(), { 0, 1, 1 }));
 		///
 
 		std::getline(in, skip_line); //Skip one line
@@ -144,8 +149,8 @@ int main()
 		std::generate(line.begin(), line.end(), [&]()->V3D 
 		{ 
 			double x, y, z;
-			x = 0.0052;//box.first.x + (box.second.x - box.first.x) / 199. * (n);
-			y = 0.0023; //box.first.y + (box.second.y - box.first.y) / 199. * (n);
+			x = box.first.x + (box.second.x - box.first.x) / 199. * (n);
+			y = box.first.y + (box.second.y - box.first.y) / 199. * (n);
 			z = box.first.z + (box.second.z - box.first.z) / 199. * (n++);
 			return{ x,y,z };
 		});
@@ -155,20 +160,21 @@ int main()
 		readBoundaries(f, std::cout, "test_files/cube.rgn");
 
 		//Create field
-		f->setBoundaryType("F21.16", PotentialField::ZERO_GRAD);
-		f->setBoundaryType("F19.16", PotentialField::ZERO_GRAD);
-		f->setBoundaryType("F18.16", PotentialField::ZERO_GRAD);
-		f->setBoundaryType("F22.16", PotentialField::ZERO_GRAD);
+		//f->setBoundaryType("F21.16", PotentialField::ZERO_GRAD);
+		//f->setBoundaryType("F19.16", PotentialField::ZERO_GRAD);
+		//f->setBoundaryType("F18.16", PotentialField::ZERO_GRAD);
+		//f->setBoundaryType("F22.16", PotentialField::ZERO_GRAD);
 		f->setBoundaryVal("F20.16", 1.0);
-		f->setBoundaryVal("F17.16", -1.0);
-		f->setBoundaryType("F20.16", PotentialField::FIXED_VAL);
-		f->setBoundaryType("F17.16", PotentialField::FIXED_VAL);
+		//f->setBoundaryVal("F17.16", -1.0);
+		//f->setBoundaryType("F20.16", PotentialField::FIXED_VAL);
+		//f->setBoundaryType("F17.16", PotentialField::FIXED_VAL);
 		std::cout << "Field calculation: \n";
 		f->applyBoundaryConditions();
-		for (int i = 0; i < 100; ++i)
+		ScalarFieldOperator* op = ScalarFieldOperator::create(f, ScalarFieldOperator::LaplacianSolver);
+		for (int i = 0; i < 1000; ++i)
 		{
 			std::vector<double> field = f->getPotentialVals();
-			f->diffuse();
+			op->applyToField(f);
 			std::vector<double> field2 = f->getPotentialVals();
 			std::cout << "step: " << i << "diff: " << field_diff(field, field2) << std::endl;
 		}
@@ -186,12 +192,6 @@ int main()
 		out.close();
 
 		std::vector<double> fld = f->getPotentialVals();
-
-		std::cout << "\nTest identity operator: \n";
-		ScalarFieldOperator* op = ScalarFieldOperator::create(f);
-		op->applyToField(f);
-		std::cout << "Field difference after operator application = " << field_diff(fld, f->getPotentialVals());
-		std::cout << std::endl;
 
 		PotentialField::free(f);
 		ScalarFieldOperator::free(op);
