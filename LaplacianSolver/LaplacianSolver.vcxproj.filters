@@ -30,9 +30,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ls_main.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
     <ClInclude Include="mesh_math\mesh_geometry.h">
       <Filter>Заголовочные файлы\mesh_math</Filter>
     </ClInclude>
@@ -56,6 +53,9 @@
     </ClInclude>
     <ClInclude Include="functionality\fieldOperatorImplementation.h">
       <Filter>Заголовочные файлы\functionality</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_main.h">
+      <Filter>Заголовочные файлы\export</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
